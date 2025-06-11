@@ -1,10 +1,66 @@
 from flask import Flask, request, jsonify, send_file
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
+import threading
 import traceback
+import sqlite3
 import os
+import uuid
+import time
 
 app = Flask(__name__)
+DB_PATH = 'tasks.db'
+
+
+# 初始化数据库（只执行一次）
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            id TEXT PRIMARY KEY,
+            crawl_type TEXT,
+            status TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            error TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+
+# 插入任务记录
+def insert_task(crawl_type):
+    task_id = str(uuid.uuid4())
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('INSERT INTO tasks (id, crawl_type, status) VALUES (?, ?, ?)', (task_id, crawl_type, 'pending'))
+    conn.commit()
+    conn.close()
+    return task_id
+
+
+# 更新任务状态
+def update_task_status(task_id, status, error=None):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('UPDATE tasks SET status = ?, error = ? WHERE id = ?', (status, error, task_id))
+    conn.commit()
+    conn.close()
+
+
+def async_process(task_id, crawl_type, email_accounts):
+    try:
+        update_task_status(task_id, 'running')
+        if crawl_type == 'imap':
+            email_downloader = IMAPEmailDownloader()
+            email_downloader.process_accounts(email_accounts)
+        else:
+            process_email_accounts(email_accounts)
+        update_task_status(task_id, 'finished')
+    except Exception as e:
+        traceback.print_exc()
+        update_task_status(task_id, 'failed', str(e))
 
 
 @app.route("/")
@@ -16,34 +72,44 @@ def hello_world():
 def submit_emails():
     data = request.get_json()
 
-    # 校验是否提供了 email_accounts 字段
     if not data or 'email_accounts' not in data:
         return jsonify({"error": "Missing 'email_accounts' parameter"}), 400
 
     email_accounts = data['email_accounts']
-    crawl_type = data.get('crawl_type')  
+    crawl_type = data.get('crawl_type', 'default')
 
-    # 简单校验每个邮箱条目是否包含 email 和 password 字段
     for account in email_accounts:
         if 'email' not in account or 'password' not in account:
             return jsonify({"error": "Each account must include 'email' and 'password'"}), 400
 
-    # 打印/处理接收到的数据（此处只是打印）
-    print("Received email accounts:", email_accounts)
+    # 创建任务记录并获取任务 ID
+    task_id = insert_task(crawl_type)
 
-    try:
-        if crawl_type == 'imap':
-            email_downloader = IMAPEmailDownloader()
-            email_downloader.process_accounts(email_accounts)
-        else:
-            process_email_accounts(email_accounts)
-    except Exception as e:
-        traceback.print_exc()  # 打印完整堆栈信息
-        return jsonify({"status":"error", "msg":"download email error"}), 500
+    # 启动后台线程处理任务
+    thread = threading.Thread(target=async_process, args=(task_id, crawl_type, email_accounts))
+    thread.start()
+
+    return jsonify({"status": "submitted", "task_id": task_id})
 
 
-    return jsonify({"status": "success", "received": email_accounts})
+@app.route('/task_status/<task_id>', methods=['GET'])
+def get_task_status(task_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT id, crawl_type, status, created_at, error FROM tasks WHERE id = ?', (task_id,))
+    row = c.fetchone()
+    conn.close()
 
+    if row:
+        return jsonify({
+            "task_id": row[0],
+            "crawl_type": row[1],
+            "status": row[2],
+            "created_at": row[3],
+            "error": row[4]
+        })
+    else:
+        return jsonify({"error": "Task not found"}), 404
 
 
 @app.route('/download', methods=['GET'])
@@ -75,3 +141,6 @@ def download_file():
 if __name__ == '__main__':
     app.run(debug=True)
 
+
+# 启动前初始化数据库
+init_db()
