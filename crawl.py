@@ -256,9 +256,10 @@ def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails"):
         total_emails += downloaded
 
         if downloaded > 0:
-            total_size = zip_email_files(email, output_dir)
+            size = zip_email_files(email, output_dir)
+            total_size += size
 
-    print(f"\n所有邮箱账号处理完成，共下载 {total_emails} 封邮件")
+    print(f"\n所有邮箱账号处理完成，共下载 {total_emails} 封邮件， 总大小：{total_size} 字节")
     return total_emails, total_size
 
 
@@ -270,4 +271,6 @@ if __name__ == "__main__":
     ]
 
     # 执行邮件下载和打包
-    process_email_accounts(email_accounts)
+    total_emails, total_size = process_email_accounts(email_accounts)
+
+    print(f"所有邮箱账号处理完成，共下载 {total_emails} 封邮件， 总大小：{total_size} 字节")

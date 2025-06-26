@@ -320,6 +320,13 @@ class IMAPEmailDownloader:
                 print(f"邮件目录为空: {email_folder}")
                 return False
 
+            # 计算打包前所有文件的总大小（单位：字节）
+            total_size = 0
+            for root, _, files in os.walk(email_folder):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    total_size += os.path.getsize(file_path)
+
             print(f"开始打包 {email} 的邮件...")
 
             # 创建ZIP文件
@@ -349,6 +356,9 @@ class IMAPEmailDownloader:
         success_count = 0
         failed_accounts = []
 
+        total_emails = 0
+        total_size = 0
+
         print(f"\n开始批量处理 {len(accounts)} 个邮箱账号")
 
         for index, account in enumerate(accounts, start=1):
@@ -359,9 +369,12 @@ class IMAPEmailDownloader:
 
             try:
                 downloaded = self.download_emails(email, password)
+                total_emails += downloaded
 
                 if downloaded > 0:
-                    self.zip_email_folder(email)
+                    size = self.zip_email_folder(email)
+                    total_size += size
+
                     success_count += 1
                     print(f"[成功] {email} 处理完成，下载 {downloaded} 封邮件")
                 else:
@@ -382,7 +395,7 @@ class IMAPEmailDownloader:
                 print(f"- {email}: {error}")
         print("=" * 50)
 
-        return success_count
+        return total_emails, total_size
 
     def close(self):
         """安全关闭资源"""
@@ -399,12 +412,13 @@ if __name__ == "__main__":
     # 测试账号 - 替换为真实账号
     TEST_ACCOUNTS = [
         {"email": "asmasaailgcba@outlook.com", "password": "1qaz@WSX..123"},
-        {"email": "coco67493@outlook.com", "password": "g0NLnGtK2skxgEsG"}
+        # {"email": "coco67493@outlook.com", "password": "g0NLnGtK2skxgEsG"}
     ]
 
     downloader = IMAPEmailDownloader()
     try:
-        downloader.process_accounts(TEST_ACCOUNTS)
+        total_emails, total_size = downloader.process_accounts(TEST_ACCOUNTS)
+        print(f"所有邮箱账号处理完成，共下载 {total_emails} 封邮件， 总大小：{total_size} 字节")
     except KeyboardInterrupt:
         print("\n用户中断操作")
     except Exception as e:

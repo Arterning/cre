@@ -58,10 +58,11 @@ def async_process(task_id, crawl_type, email_accounts):
         update_task_status(task_id, 'running')
         if crawl_type == 'imap':
             email_downloader = IMAPEmailDownloader()
-            email_downloader.process_accounts(email_accounts)
+            total_emails, total_size = email_downloader.process_accounts(email_accounts)
         else:
             total_emails, total_size = process_email_accounts(email_accounts)
-        update_task_status(task_id, 'finished', total_emails, total_size)
+            print("任务完成, 总邮件数:", total_emails, "总大小:", total_size)
+        update_task_status(task_id=task_id, status='finished', error=None, total_emails=total_emails, total_size=total_size)
     except Exception as e:
         traceback.print_exc()
         update_task_status(task_id, 'failed', str(e))
