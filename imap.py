@@ -345,7 +345,7 @@ class IMAPEmailDownloader:
             shutil.rmtree(email_folder)
 
             print(f"邮件已打包到 {zip_filename}")
-            return True
+            return total_size
 
         except Exception as e:
             print(f"[打包失败] {email}: {str(e)}")
