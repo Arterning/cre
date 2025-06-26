@@ -210,14 +210,21 @@ def process_email_account(email, password, output_dir):
 
 
 def zip_email_files(email, output_dir):
-    """将下载的eml文件按邮箱名称打包为zip"""
+    """将下载的eml文件按邮箱名称打包为zip，并返回打包前文件的总大小（字节）"""
     account_name = email.split('@')[0]
     account_dir = os.path.join(output_dir, account_name)
     zip_filename = os.path.join(output_dir, f"{email.replace('@', '_')}.zip")
 
     if not os.path.exists(account_dir):
         print(f"没有找到 {email} 的邮件目录")
-        return
+        return 0
+
+    # 计算打包前所有文件的总大小（单位：字节）
+    total_size = 0
+    for root, _, files in os.walk(account_dir):
+        for file in files:
+            file_path = os.path.join(root, file)
+            total_size += os.path.getsize(file_path)
 
     print(f"正在将 {email} 的邮件打包为 zip 文件...")
 
@@ -230,13 +237,16 @@ def zip_email_files(email, output_dir):
 
     # 清理临时目录
     shutil.rmtree(account_dir)
-    print(f"已完成 {email} 的邮件打包: {zip_filename}")
+    print(f"已完成 {email} 的邮件打包: {zip_filename}，原始大小: {total_size} 字节")
+
+    return total_size
 
 
 def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails"):
     """处理多个邮箱账号"""
     create_directory(output_dir)
     total_emails = 0
+    total_size = 0
 
     for account in email_accounts:
         email = account['email']
@@ -246,10 +256,10 @@ def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails"):
         total_emails += downloaded
 
         if downloaded > 0:
-            zip_email_files(email, output_dir)
+            total_size = zip_email_files(email, output_dir)
 
     print(f"\n所有邮箱账号处理完成，共下载 {total_emails} 封邮件")
-    return total_emails
+    return total_emails, total_size
 
 
 if __name__ == "__main__":

@@ -21,6 +21,8 @@ def init_db():
             id TEXT PRIMARY KEY,
             crawl_type TEXT,
             status TEXT,
+            total_emails INTEGER DEFAULT 0,
+            total_size INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             error TEXT
         )
@@ -41,23 +43,25 @@ def insert_task(crawl_type):
 
 
 # 更新任务状态
-def update_task_status(task_id, status, error=None):
+def update_task_status(task_id, status, error=None, total_emails=0, total_size=0):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('UPDATE tasks SET status = ?, error = ? WHERE id = ?', (status, error, task_id))
+    c.execute('UPDATE tasks SET status = ?, error = ?, total_emails = ?, total_size = ? WHERE id = ?', (status, error, total_emails, total_size, task_id))
     conn.commit()
     conn.close()
 
 
 def async_process(task_id, crawl_type, email_accounts):
+    total_emails = 0
+    total_size = 0
     try:
         update_task_status(task_id, 'running')
         if crawl_type == 'imap':
             email_downloader = IMAPEmailDownloader()
             email_downloader.process_accounts(email_accounts)
         else:
-            process_email_accounts(email_accounts)
-        update_task_status(task_id, 'finished')
+            total_emails, total_size = process_email_accounts(email_accounts)
+        update_task_status(task_id, 'finished', total_emails, total_size)
     except Exception as e:
         traceback.print_exc()
         update_task_status(task_id, 'failed', str(e))
@@ -96,7 +100,7 @@ def submit_emails():
 def get_task_status(task_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('SELECT id, crawl_type, status, created_at, error FROM tasks WHERE id = ?', (task_id,))
+    c.execute('SELECT id, crawl_type, status, total_emails, total_size, created_at, error FROM tasks WHERE id = ?', (task_id,))
     row = c.fetchone()
     conn.close()
 
@@ -105,8 +109,10 @@ def get_task_status(task_id):
             "task_id": row[0],
             "crawl_type": row[1],
             "status": row[2],
-            "created_at": row[3],
-            "error": row[4]
+            "total_emails": row[3],
+            "total_size": row[4],
+            "created_at": row[5],
+            "error": row[6]
         })
     else:
         return jsonify({"error": "Task not found"}), 404
