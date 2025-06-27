@@ -286,8 +286,8 @@ def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails", pro
     for account in email_accounts:
         email = account['email']
         password = account['password']
-        proxy = account['proxy']
-        user_agent = account['user_agent']
+        proxy = account.get('proxy', None)
+        user_agent = account.get('user_agent', None)
 
         downloaded = process_email_account(email, password, output_dir, proxy, user_agent)
         total_emails += downloaded
