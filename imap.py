@@ -232,9 +232,17 @@ class IMAPEmailDownloader:
             print(f"IMAP检查出错: {str(e)}")
             return False
 
-    def download_emails(self, email, password):
+    def download_emails(self, email, password, proxy=None, user_agent=None):
         """增强版邮件下载方法，处理IMAP未启用情况"""
         try:
+
+            if proxy:
+                print("设置代理:", proxy)
+                # 运行时修改代理
+                os.environ['HTTP_PROXY'] = f'http://{proxy}'
+                os.environ['HTTPS_PROXY'] = f'http://{proxy}'
+
+
             print(f"\n[开始下载] 处理邮箱: {email}")
 
             # 1. 获取授权码
@@ -365,10 +373,13 @@ class IMAPEmailDownloader:
             email = account['email']
             password = account['password']
 
+            proxy = account.get('proxy', None)
+            user_agent = account.get('user_agent', None)
+
             print(f"\n[{index}/{len(accounts)}] 正在处理 {email}")
 
             try:
-                downloaded = self.download_emails(email, password)
+                downloaded = self.download_emails(email, password, proxy, user_agent)
                 total_emails += downloaded
 
                 if downloaded > 0:
