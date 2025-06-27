@@ -60,6 +60,11 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
         else:
             # 处理http/https代理
             chrome_options.add_argument(f'--proxy-server={proxy}')
+            
+            # 运行时修改代理
+            os.environ['HTTP_PROXY'] = f'http://{proxy}'
+            os.environ['HTTPS_PROXY'] = f'http://{proxy}'
+
 
     # 设置下载参数
     chrome_options.add_experimental_option("prefs", {
