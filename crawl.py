@@ -8,6 +8,8 @@ import os
 import traceback
 import shutil
 import zipfile
+import argparse
+from datetime import datetime
 
 
 def create_directory(path):
@@ -16,7 +18,7 @@ def create_directory(path):
         os.makedirs(path)
 
 
-def process_email_account(email, password, output_dir):
+def process_email_account(email, password, output_dir, proxy=None, user_agent=None):
     """处理单个邮箱账号的邮件下载"""
     account_name = email.split('@')[0]
     account_dir = os.path.join(output_dir, account_name)
@@ -28,11 +30,36 @@ def process_email_account(email, password, output_dir):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/137.0.0.0 Safari/537.36"
-    )
+
+    # 设置用户代理
+    if user_agent:
+        chrome_options.add_argument(f"user-agent={user_agent}")
+    else:
+        chrome_options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/137.0.0.0 Safari/537.36"
+        )
+
+    # 设置代理
+    if proxy:
+        if proxy.startswith('socks5://'):
+            # 处理带认证的socks5代理
+            if '@' in proxy:
+                # 格式: socks5://username:password@host:port
+                proxy_parts = proxy.split('@')
+                auth_part = proxy_parts[0].replace('socks5://', '')
+                username, password_proxy = auth_part.split(':')
+                host_port = proxy_parts[1]
+                chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
+                chrome_options.add_argument(f'--proxy-auth={username}:{password_proxy}')
+            else:
+                # 格式: socks5://host:port
+                host_port = proxy.replace('socks5://', '')
+                chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
+        else:
+            # 处理http/https代理
+            chrome_options.add_argument(f'--proxy-server={proxy}')
 
     # 设置下载参数
     chrome_options.add_experimental_option("prefs", {
@@ -118,6 +145,7 @@ def process_email_account(email, password, output_dir):
                                             ))
         )
         current_style = first_email.get_attribute("style")
+        print(f"First email style: {current_style}")
         email_count = 0
 
         while True:
@@ -153,7 +181,7 @@ def process_email_account(email, password, output_dir):
                             (By.CSS_SELECTOR, "button[aria-label='下载'], button[aria-label='download']"))
                     )
                     download_button.click()
-                    time.sleep(0.5)
+                    time.sleep(1)
                 except:
                     print("未找到下载按钮")
                     break
@@ -179,17 +207,19 @@ def process_email_account(email, password, output_dir):
                 try:
                     close_button = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Close']")
                     close_button.click()
-                    time.sleep(0.5)
+                    time.sleep(1)
                 except:
                     pass
 
                 # 转到下一封邮件
                 try:
+                    print("处理下一封邮件")
                     next_email = driver.find_element(
                         By.XPATH, f"//div[contains(@style, '{current_style}')]/following-sibling::div[1]"
                     )
                     current_style = next_email.get_attribute("style")
-                    time.sleep(1.5)
+                    print(f"Next email style: {current_style}")
+                    time.sleep(1)
                 except:
                     print("没有更多邮件需要下载")
                     break
@@ -242,7 +272,7 @@ def zip_email_files(email, output_dir):
     return total_size
 
 
-def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails"):
+def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails", proxy=None, user_agent=None):
     """处理多个邮箱账号"""
     create_directory(output_dir)
     total_emails = 0
@@ -252,7 +282,7 @@ def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails"):
         email = account['email']
         password = account['password']
 
-        downloaded = process_email_account(email, password, output_dir)
+        downloaded = process_email_account(email, password, output_dir, proxy, user_agent)
         total_emails += downloaded
 
         if downloaded > 0:
@@ -263,14 +293,32 @@ def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails"):
     return total_emails, total_size
 
 
+def parse_args():
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(description='Outlook邮件下载工具')
+    parser.add_argument('--email', help='邮箱地址', required=True)
+    parser.add_argument('--password', help='邮箱密码', required=True)
+    parser.add_argument('--output', help='输出目录', default='/outlook_emails')
+    parser.add_argument('--proxy',
+                        help='代理设置，支持socks5/http/https，格式: socks5://127.0.0.1:1005:username:password 或 socks5://127.0.0.1:1005')
+    parser.add_argument('--ua', help='自定义User-Agent头')
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = parse_args()
+
     # 配置要处理的邮箱账号
     email_accounts = [
-        {"email": "asmasaailgcba@outlook.com", "password": "1qaz@WSX..123"}
-        # 可以添加更多邮箱账号
+        {"email": args.email, "password": args.password}
     ]
 
     # 执行邮件下载和打包
-    total_emails, total_size = process_email_accounts(email_accounts)
+    total_emails, total_size = process_email_accounts(
+        email_accounts,
+        output_dir=args.output,
+        proxy=args.proxy,
+        user_agent=args.ua
+    )
 
     print(f"所有邮箱账号处理完成，共下载 {total_emails} 封邮件， 总大小：{total_size} 字节")
