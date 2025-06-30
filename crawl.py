@@ -66,8 +66,8 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
             print("设置代理:", proxy)
             
             # 运行时修改代理
-            os.environ['HTTP_PROXY'] = f'{proxy}'
-            os.environ['HTTPS_PROXY'] = f'{proxy}'
+            # os.environ['HTTP_PROXY'] = f'{proxy}'
+            # os.environ['HTTPS_PROXY'] = f'{proxy}'
 
 
     # 设置下载参数
