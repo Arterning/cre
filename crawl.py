@@ -53,7 +53,9 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
                 host_port = proxy_parts[1]
                 chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
                 chrome_options.add_argument(f'--proxy-auth={username}:{password_proxy}')
-            else:
+
+            # 处理不带认证的
+            if 'socks5://' in proxy:
                 # 格式: socks5://host:port
                 host_port = proxy.replace('socks5://', '')
                 chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
