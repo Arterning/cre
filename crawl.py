@@ -61,7 +61,7 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
                 chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
         else:
             # 处理http/https代理
-            chrome_options.add_argument(f'--proxy-server={proxy}')
+            # chrome_options.add_argument(f'--proxy-server={proxy}')
 
             print("设置代理:", proxy)
             
