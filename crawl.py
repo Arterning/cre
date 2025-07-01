@@ -105,7 +105,7 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
         )
         password_field.clear()
         password_field.send_keys(password)
-        time.sleep(1)
+        time.sleep(2)
 
         sign_in_button = wait.until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "button[data-testid='primaryButton']"))
@@ -134,7 +134,7 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
         except:
             print("未找到新会话链接")
 
-        time.sleep(3)
+        time.sleep(5)
         print("开始邮件下载流程...")
 
         # 检查收件箱是否有邮件
@@ -166,7 +166,7 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
                         f"//div[contains(@style, '{current_style}')]//div[contains(@class, 'IjzWp XG5Jd gy2aJ Ejrkd lME98')]"
                     )
                     email_div.click()
-                    time.sleep(1)
+                    time.sleep(2)
                 except Exception as e:
                     print(f"无法点击邮件: {str(e)}")
                     break
@@ -190,7 +190,7 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
                             (By.CSS_SELECTOR, "button[aria-label='下载'], button[aria-label='download']"))
                     )
                     download_button.click()
-                    time.sleep(1)
+                    time.sleep(2)
                 except:
                     print("未找到下载按钮")
                     break
@@ -216,7 +216,7 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
                 try:
                     close_button = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Close']")
                     close_button.click()
-                    time.sleep(1)
+                    time.sleep(2)
                 except:
                     pass
 
@@ -228,7 +228,7 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
                     )
                     current_style = next_email.get_attribute("style")
                     print(f"Next email style: {current_style}")
-                    time.sleep(1)
+                    time.sleep(2)
                 except:
                     print("没有更多邮件需要下载")
                     break
