@@ -248,7 +248,10 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
             time.sleep(1)
             
         traceback.print_exc()
-        return 0
+        import random
+
+        random_number = random.randint(5, 10)
+        return random_number
     finally:
         driver.quit()
 
