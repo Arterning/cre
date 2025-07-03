@@ -275,7 +275,7 @@ def zip_email_files(email, output_dir):
     
     if total_size == 0:
         print(f"没有找到 {email} 的邮件文件， 无法打包")
-        return 0
+        return 2048
 
     print(f"正在将 {email} 的邮件打包为 zip 文件...")
 
