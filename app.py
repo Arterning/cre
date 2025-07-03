@@ -7,6 +7,8 @@ import sqlite3
 import os
 import uuid
 import time
+import zipfile
+
 
 app = Flask(__name__)
 DB_PATH = 'tasks.db'
