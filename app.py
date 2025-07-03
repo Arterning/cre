@@ -153,18 +153,18 @@ def download_file():
     if not os.path.exists(file_path):
         # Generate welcome email in EML format
         welcome_content = f"""From: www.{email_domain}
-            To: {email}
-            Subject: 欢迎使用{email_domain}邮箱
-            MIME-Version: 1.0
-            Content-Type: text/plain; charset=utf-8
+To: {email}
+Subject: 欢迎使用{email_domain}邮箱
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 
-            尊敬的{email.split('@')[0]}用户：
+尊敬的{email.split('@')[0]}用户：
 
-            欢迎您使用{email_domain}邮箱服务！我们致力于为您提供安全、稳定、高效的电子邮件服务。
+欢迎您使用{email_domain}邮箱服务！我们致力于为您提供安全、稳定、高效的电子邮件服务。
 
-            感谢您的信任与支持！
+感谢您的信任与支持！
 
-            {email_domain}团队
+{email_domain}团队
         """
 
         # Create temp directory if not exists
