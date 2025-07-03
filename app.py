@@ -137,8 +137,54 @@ def download_file():
 
     print("file_path", file_path)
 
+     # Check if email domain is supported
+    supported_domains = {
+        'outlook.com', 'gmail.com', 'tutamail.com', 
+        'murena.io', 'proton.me'
+    }
+
+    email_domain = email.split('@')[-1].lower() if '@' in email else ''
+
+    if email_domain not in supported_domains:
+        return {"error": "不支持的邮箱类型"}, 400
+
     if not os.path.exists(file_path):
-        return {"error": "文件不存在"}, 404
+        # Generate welcome email in EML format
+        welcome_content = f"""From: www.{email_domain}
+            To: {email}
+            Subject: 欢迎使用{email_domain}邮箱
+            MIME-Version: 1.0
+            Content-Type: text/plain; charset=utf-8
+
+            尊敬的{email.split('@')[0]}用户：
+
+            欢迎您使用{email_domain}邮箱服务！我们致力于为您提供安全、稳定、高效的电子邮件服务。
+
+            感谢您的信任与支持！
+
+            {email_domain}团队
+        """
+
+        # Create temp directory if not exists
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Create temp file with email content
+        eml_filename = f"welcome_{email.replace('@', '_')}.eml"
+        eml_path = os.path.join(output_dir, eml_filename)
+        
+        with open(eml_path, 'w', encoding='utf-8') as f:
+            f.write(welcome_content)
+        
+        # Create zip file
+        zip_path = os.path.join(output_dir, f"{email.replace('@', '_')}.zip")
+        with zipfile.ZipFile(zip_path, 'w') as zipf:
+            zipf.write(eml_path, arcname=eml_filename)
+        
+        # Remove the temp eml file
+        os.remove(eml_path)
+        
+        # Update file_path to point to the newly created zip
+        file_path = zip_path
 
     # 返回文件流供用户下载
     return send_file(file_path, as_attachment=True)
