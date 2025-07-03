@@ -242,6 +242,11 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
 
     except Exception as e:
         print(f"处理邮箱 {email} 时出错: {str(e)}")
+        # print("需要等待一段时间.。。。")
+        for i in range(50):
+            print("需要等待一段时间....")
+            time.sleep(1)
+            
         traceback.print_exc()
         return 0
     finally:
