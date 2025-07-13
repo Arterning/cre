@@ -26,6 +26,7 @@ def process_email_account(email, password, output_dir, proxy_list=None, user_age
     create_directory(account_dir)
 
     # 随机选择一个用户代理
+    import random
     if user_agent_list and isinstance(user_agent_list, list):
         user_agent = random.choice(user_agent_list)
     else:
