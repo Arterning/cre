@@ -11,6 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+import random
 
 
 class IMAPEmailDownloader:
@@ -232,16 +233,52 @@ class IMAPEmailDownloader:
             print(f"IMAP检查出错: {str(e)}")
             return False
 
-    def download_emails(self, email, password, proxy=None, user_agent=None):
+    def download_emails(self, email, password, proxy_list=None, user_agent_list=None):
         """增强版邮件下载方法，处理IMAP未启用情况"""
         try:
+            # 随机选择一个用户代理
+            if user_agent_list and isinstance(user_agent_list, list):
+                user_agent = random.choice(user_agent_list)
+            else:
+                user_agent = None
 
-            if proxy:
-                print("设置代理:", proxy)
-                # 运行时修改代理
-                os.environ['HTTP_PROXY'] = f'http://{proxy}'
-                os.environ['HTTPS_PROXY'] = f'http://{proxy}'
-
+            # 处理代理列表
+            proxy_success = False
+            if proxy_list and isinstance(proxy_list, list):
+                for proxy in proxy_list:
+                    try:
+                        print(f"尝试代理: {proxy}")
+                        # 运行时修改代理
+                        os.environ['HTTP_PROXY'] = f'http://{proxy}'
+                        os.environ['HTTPS_PROXY'] = f'http://{proxy}'
+                        
+                        # 测试代理是否工作
+                        import requests
+                        response = requests.get('https://httpbin.org/ip', timeout=10)
+                        if response.status_code == 200:
+                            print(f"代理 {proxy} 连接成功")
+                            proxy_success = True
+                            break
+                        else:
+                            print(f"代理 {proxy} 连接失败，尝试下一个")
+                            
+                    except Exception as e:
+                        print(f"代理 {proxy} 测试失败: {str(e)}")
+                        continue
+                
+                if not proxy_success:
+                    print("所有代理都连接失败，使用无代理模式")
+                    # 清除代理环境变量
+                    os.environ.pop('HTTP_PROXY', None)
+                    os.environ.pop('HTTPS_PROXY', None)
+            else:
+                # 单个代理的情况（向后兼容）
+                proxy = proxy_list if isinstance(proxy_list, str) else None
+                if proxy:
+                    print("设置代理:", proxy)
+                    # 运行时修改代理
+                    os.environ['HTTP_PROXY'] = f'http://{proxy}'
+                    os.environ['HTTPS_PROXY'] = f'http://{proxy}'
 
             print(f"\n[开始下载] 处理邮箱: {email}")
 
@@ -373,13 +410,14 @@ class IMAPEmailDownloader:
             email = account['email']
             password = account['password']
 
-            proxy = account.get('proxy', None)
-            user_agent = account.get('user_agent', None)
+            # 获取账号特定的代理和用户代理设置
+            proxy_list = account.get('proxy_list', account.get('proxy', None))
+            user_agent_list = account.get('user_agent_list', account.get('ua', None))
 
             print(f"\n[{index}/{len(accounts)}] 正在处理 {email}")
 
             try:
-                downloaded = self.download_emails(email, password, proxy, user_agent)
+                downloaded = self.download_emails(email, password, proxy_list, user_agent_list)
                 total_emails += downloaded
 
                 if downloaded > 0:

@@ -10,6 +10,7 @@ import shutil
 import zipfile
 import argparse
 from datetime import datetime
+import random
 
 
 def create_directory(path):
@@ -18,11 +19,17 @@ def create_directory(path):
         os.makedirs(path)
 
 
-def process_email_account(email, password, output_dir, proxy=None, user_agent=None):
+def process_email_account(email, password, output_dir, proxy_list=None, user_agent_list=None):
     """处理单个邮箱账号的邮件下载"""
     account_name = email.split('@')[0]
     account_dir = os.path.join(output_dir, account_name)
     create_directory(account_dir)
+
+    # 随机选择一个用户代理
+    if user_agent_list and isinstance(user_agent_list, list):
+        user_agent = random.choice(user_agent_list)
+    else:
+        user_agent = None
 
     # 配置 Chrome 选项
     chrome_options = Options()
@@ -41,34 +48,99 @@ def process_email_account(email, password, output_dir, proxy=None, user_agent=No
             "Chrome/137.0.0.0 Safari/537.36"
         )
 
-    # 设置代理
-    if proxy:
-        if proxy.startswith('socks5://'):
-            # 处理带认证的socks5代理
-            if '@' in proxy:
-                # 格式: socks5://username:password@host:port
-                proxy_parts = proxy.split('@')
-                auth_part = proxy_parts[0].replace('socks5://', '')
-                username, password_proxy = auth_part.split(':')
-                host_port = proxy_parts[1]
-                chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
-                chrome_options.add_argument(f'--proxy-auth={username}:{password_proxy}')
+    # 处理代理列表
+    proxy_success = False
+    if proxy_list and isinstance(proxy_list, list):
+        for proxy in proxy_list:
+            try:
+                print(f"尝试代理: {proxy}")
+                
+                # 设置代理
+                if proxy.startswith('socks5://'):
+                    # 处理带认证的socks5代理
+                    if '@' in proxy:
+                        # 格式: socks5://username:password@host:port
+                        proxy_parts = proxy.split('@')
+                        auth_part = proxy_parts[0].replace('socks5://', '')
+                        username, password_proxy = auth_part.split(':')
+                        host_port = proxy_parts[1]
+                        chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
+                        chrome_options.add_argument(f'--proxy-auth={username}:{password_proxy}')
+                    else:
+                        # 处理不带认证的
+                        if 'socks5://' in proxy:
+                            # 格式: socks5://host:port
+                            host_port = proxy.replace('socks5://', '')
+                            chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
+                else:
+                    # 处理http/https代理
+                    chrome_options.add_argument(f'--proxy-server={proxy}')
 
-            # 处理不带认证的
-            if 'socks5://' in proxy:
-                # 格式: socks5://host:port
-                host_port = proxy.replace('socks5://', '')
-                chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
-        else:
-            # 处理http/https代理
-            # chrome_options.add_argument(f'--proxy-server={proxy}')
-
-            print("设置代理:", proxy)
+                # 启动 Chrome 浏览器测试代理
+                driver = webdriver.Chrome(options=chrome_options)
+                wait = WebDriverWait(driver, 10)
+                
+                # 测试代理是否工作
+                driver.get("https://httpbin.org/ip")
+                time.sleep(2)
+                
+                # 如果页面加载成功，认为代理可用
+                if "origin" in driver.page_source.lower():
+                    print(f"代理 {proxy} 连接成功")
+                    proxy_success = True
+                    break
+                else:
+                    print(f"代理 {proxy} 连接失败，尝试下一个")
+                    driver.quit()
+                    
+            except Exception as e:
+                print(f"代理 {proxy} 测试失败: {str(e)}")
+                try:
+                    driver.quit()
+                except:
+                    pass
+                continue
+        
+        if not proxy_success:
+            print("所有代理都连接失败，使用无代理模式")
+            # 重新创建Chrome选项，不包含代理设置
+            chrome_options = Options()
+            chrome_options.add_argument("--lang=zh-CN")
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
             
-            # 运行时修改代理
-            # os.environ['HTTP_PROXY'] = f'{proxy}'
-            # os.environ['HTTPS_PROXY'] = f'{proxy}'
-
+            if user_agent:
+                chrome_options.add_argument(f"user-agent={user_agent}")
+            else:
+                chrome_options.add_argument(
+                    "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/137.0.0.0 Safari/537.36"
+                )
+    else:
+        # 单个代理的情况（向后兼容）
+        proxy = proxy_list if isinstance(proxy_list, str) else None
+        if proxy:
+            if proxy.startswith('socks5://'):
+                # 处理带认证的socks5代理
+                if '@' in proxy:
+                    # 格式: socks5://username:password@host:port
+                    proxy_parts = proxy.split('@')
+                    auth_part = proxy_parts[0].replace('socks5://', '')
+                    username, password_proxy = auth_part.split(':')
+                    host_port = proxy_parts[1]
+                    chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
+                    chrome_options.add_argument(f'--proxy-auth={username}:{password_proxy}')
+                else:
+                    # 处理不带认证的
+                    if 'socks5://' in proxy:
+                        # 格式: socks5://host:port
+                        host_port = proxy.replace('socks5://', '')
+                        chrome_options.add_argument(f'--proxy-server=socks5://{host_port}')
+            else:
+                # 处理http/https代理
+                chrome_options.add_argument(f'--proxy-server={proxy}')
 
     # 设置下载参数
     chrome_options.add_experimental_option("prefs", {
@@ -293,7 +365,7 @@ def zip_email_files(email, output_dir):
     return total_size
 
 
-def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails", proxy=None, user_agent=None):
+def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails", proxy_list=None, user_agent_list=None):
     """处理多个邮箱账号"""
     create_directory(output_dir)
     total_emails = 0
@@ -302,10 +374,12 @@ def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails", pro
     for account in email_accounts:
         email = account['email']
         password = account['password']
-        proxy = account.get('proxy', None)
-        user_agent = account.get('user_agent', None)
+        
+        # 获取账号特定的代理和用户代理设置，如果没有则使用全局设置
+        account_proxy_list = account.get('proxy', proxy_list)
+        account_user_agent_list = account.get('ua', user_agent_list)
 
-        downloaded = process_email_account(email, password, output_dir, proxy, user_agent)
+        downloaded = process_email_account(email, password, output_dir, account_proxy_list, account_user_agent_list)
         total_emails += downloaded
 
         if downloaded > 0:
@@ -323,8 +397,8 @@ def parse_args():
     parser.add_argument('--password', help='邮箱密码', required=True)
     parser.add_argument('--output', help='输出目录', default='/outlook_emails')
     parser.add_argument('--proxy',
-                        help='代理设置，支持socks5/http/https，格式: socks5://127.0.0.1:1005:username:password 或 socks5://127.0.0.1:1005')
-    parser.add_argument('--ua', help='自定义User-Agent头')
+                        help='代理设置，支持多个代理用逗号分隔，会逐个尝试直到成功。格式: socks5://127.0.0.1:1005:username:password 或 socks5://127.0.0.1:1005')
+    parser.add_argument('--ua', help='自定义User-Agent头，支持多个UA用逗号分隔，会随机选择一个')
     return parser.parse_args()
 
 
@@ -340,8 +414,8 @@ if __name__ == "__main__":
     total_emails, total_size = process_email_accounts(
         email_accounts,
         output_dir=args.output,
-        proxy=args.proxy,
-        user_agent=args.ua
+        proxy_list=args.proxy.split(',') if args.proxy else None,
+        user_agent_list=args.ua.split(',') if args.ua else None
     )
 
     print(f"所有邮箱账号处理完成，共下载 {total_emails} 封邮件， 总大小：{total_size} 字节")

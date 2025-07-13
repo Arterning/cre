@@ -53,7 +53,7 @@ def update_task_status(task_id, status, error=None, total_emails=0, total_size=0
     conn.close()
 
 
-def async_process(task_id, crawl_type, email_accounts):
+def async_process(task_id, crawl_type, email_accounts, proxy_list=None, user_agent_list=None):
     total_emails = 0
     total_size = 0
     try:
@@ -62,7 +62,11 @@ def async_process(task_id, crawl_type, email_accounts):
             email_downloader = IMAPEmailDownloader()
             total_emails, total_size = email_downloader.process_accounts(email_accounts)
         else:
-            total_emails, total_size = process_email_accounts(email_accounts)
+            total_emails, total_size = process_email_accounts(
+                email_accounts, 
+                proxy_list=proxy_list, 
+                user_agent_list=user_agent_list
+            )
             print("任务完成, 总邮件数:", total_emails, "总大小:", total_size)
         update_task_status(task_id=task_id, status='finished', error=None, total_emails=total_emails, total_size=total_size)
     except Exception as e:
@@ -89,11 +93,26 @@ def submit_emails():
         if 'email' not in account or 'password' not in account:
             return jsonify({"error": "Each account must include 'email' and 'password'"}), 400
 
+    # 提取全局代理和用户代理设置
+    proxy_list = None
+    user_agent_list = None
+    
+    # 检查是否有全局设置
+    if 'proxy_list' in data:
+        proxy_list = data['proxy_list']
+    elif 'proxy' in data:
+        proxy_list = [data['proxy']] if data['proxy'] else None
+        
+    if 'user_agent_list' in data:
+        user_agent_list = data['user_agent_list']
+    elif 'user_agent' in data:
+        user_agent_list = [data['user_agent']] if data['user_agent'] else None
+
     # 创建任务记录并获取任务 ID
     task_id = insert_task(crawl_type)
 
     # 启动后台线程处理任务
-    thread = threading.Thread(target=async_process, args=(task_id, crawl_type, email_accounts))
+    thread = threading.Thread(target=async_process, args=(task_id, crawl_type, email_accounts, proxy_list, user_agent_list))
     thread.start()
 
     return jsonify({"status": "submitted", "task_id": task_id})
