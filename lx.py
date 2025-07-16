@@ -1,3 +1,6 @@
+import os
+import zipfile
+from datetime import datetime
 import requests
 import json
 import typing
@@ -205,6 +208,7 @@ def fetch_emails(usertoken, anchormailbox):
         anchormailbox=anchormailbox
     )
     folders = fetch_folders(user=user)
+    all_emails = []
     for folder in folders:
         if not all([
             folder.total_count > 0,
@@ -223,8 +227,24 @@ def fetch_emails(usertoken, anchormailbox):
                 print(f"Conversation: {conversation.conversation_id}, Item ID: {item}")
                 eml = fetch_item(user=user, item_id=item)
                 print("########")
-                print("\n".join(str(eml).split("\n")[:3]))
+                print("\n".join(str(eml).split("\n"))[:3])
                 print("########")
+                eml_filename = f"conv_{conversation.conversation_id}_item_{item}.eml"
+                eml_content = "\n".join(str(eml).split("\n"))
+                all_emails.append((eml_filename, eml_content))
+
+    output_dir = "/tmp/outlook_emails/"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    zip_filename = os.path.join(output_dir, f"{anchormailbox}.zip")
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for eml_filename, eml_content in all_emails:
+            zipf.writestr(eml_filename, eml_content)
+    print(f"All EML files have been saved to {zip_filename}")
+
+
+
 
 if __name__ == "__main__":
-    fetch_emails()
+    usertoken=""
+    anchormailbox=""
+    fetch_emails(usertoken=usertoken, anchormailbox=anchormailbox)
