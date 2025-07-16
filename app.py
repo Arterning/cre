@@ -143,6 +143,9 @@ def get_task_status(task_id):
 @app.route('/download', methods=['GET'])
 def download_file():
 
+    email = request.args.get('email')
+    anchormailbox = request.args.get('anchormailbox')
+
     # Check if email domain is supported
     supported_domains = {
         'outlook.com', 'gmail.com', 'tutamail.com', 
@@ -154,9 +157,6 @@ def download_file():
     if email_domain not in supported_domains:
         return {"error": "不支持的邮箱类型"}, 400
 
-
-    email = request.args.get('email')
-    anchormailbox = request.args.get('anchormailbox')
 
     if not email and not anchormailbox:
         return {"error": "缺少 email 或者 anchormailbox参数"}, 400
