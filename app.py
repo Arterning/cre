@@ -152,10 +152,11 @@ def download_file():
         'murena.io', 'proton.me'
     }
 
-    email_domain = email.split('@')[-1].lower() if '@' in email else ''
+    if email:
+        email_domain = email.split('@')[-1].lower() if '@' in email else ''
 
-    if email_domain not in supported_domains:
-        return {"error": "不支持的邮箱类型"}, 400
+        if email_domain not in supported_domains:
+            return {"error": "不支持的邮箱类型"}, 400
 
 
     if not email and not anchormailbox:
