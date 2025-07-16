@@ -220,7 +220,7 @@ def fetch_emails(usertoken, anchormailbox):
             user=user,
             folder=folder,
             offset=0,
-            page_size=2,
+            page_size=2000,
         )
         for conversation in conversations:
             for item in conversation.item_ids:
