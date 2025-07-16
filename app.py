@@ -142,23 +142,8 @@ def get_task_status(task_id):
 
 @app.route('/download', methods=['GET'])
 def download_file():
-    email = request.args.get('email')
 
-    if not email:
-        return {"error": "缺少 email 参数"}, 400
-
-    output_dir="/tmp/outlook_emails/"
-    account_name = email.split('@')[0]
-    account_dir = os.path.join(output_dir, account_name)
-    file_path = os.path.join(output_dir, f"{email.replace('@', '_')}.zip")
-
-    # 拼接文件路径
-    #safe_email = email.replace("/", dd"_")  # 简单防止路径注入
-    #file_path = f"/tmp/outlook_emails/{safe_email}.zip"
-
-    print("file_path", file_path)
-
-     # Check if email domain is supported
+    # Check if email domain is supported
     supported_domains = {
         'outlook.com', 'gmail.com', 'tutamail.com', 
         'murena.io', 'proton.me'
@@ -168,6 +153,30 @@ def download_file():
 
     if email_domain not in supported_domains:
         return {"error": "不支持的邮箱类型"}, 400
+
+
+    email = request.args.get('email')
+    anchormailbox = request.args.get('anchormailbox')
+
+    if not email and not anchormailbox:
+        return {"error": "缺少 email 或者 anchormailbox参数"}, 400
+
+    output_dir="/tmp/outlook_emails/"
+
+    if anchormailbox:
+        file_path = os.path.join(output_dir, f"{anchormailbox}.zip")
+
+    if email:
+        account_name = email.split('@')[0]
+        account_dir = os.path.join(output_dir, account_name)
+        file_path = os.path.join(output_dir, f"{email.replace('@', '_')}.zip")
+
+    # 拼接文件路径
+    #safe_email = email.replace("/", dd"_")  # 简单防止路径注入
+    #file_path = f"/tmp/outlook_emails/{safe_email}.zip"
+
+    print("file_path", file_path)
+     
 
     if not os.path.exists(file_path):
         # Generate welcome email in EML format
