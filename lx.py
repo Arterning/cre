@@ -246,8 +246,8 @@ def fetch_all_emails(email_accounts):
     total_emails = 0
     total_size = 0
     for account in email_accounts:
-        token = account['token']
-        anchormailbox = account['anchormailbox']
+        token = account['password']
+        anchormailbox = account['email']
         fetch_emails(token, anchormailbox)
 
     import random
