@@ -64,7 +64,7 @@ def async_process(task_id, crawl_type, email_accounts, proxy_list=None, user_age
         if crawl_type == 'imap':
             email_downloader = IMAPEmailDownloader()
             total_emails, total_size = email_downloader.process_accounts(email_accounts)
-        else:
+        if crawl_type == 'default':
             total_emails, total_size = process_email_accounts(
                 email_accounts, 
                 proxy_list=proxy_list, 
