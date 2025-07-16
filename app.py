@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_file
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
+from lx import fetch_all_emails
 import threading
 import traceback
 import sqlite3
@@ -58,6 +59,8 @@ def async_process(task_id, crawl_type, email_accounts, proxy_list=None, user_age
     total_size = 0
     try:
         update_task_status(task_id, 'running')
+        if crawl_type == 'token':
+            total_emails, total_size = fetch_all_emails(email_accounts)
         if crawl_type == 'imap':
             email_downloader = IMAPEmailDownloader()
             total_emails, total_size = email_downloader.process_accounts(email_accounts)
