@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_file
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
 from lx import fetch_all_emails
+from cookie_crawl import fetch_all_emails_by_cookie
 import threading
 import traceback
 import sqlite3
@@ -54,11 +55,13 @@ def update_task_status(task_id, status, error=None, total_emails=0, total_size=0
     conn.close()
 
 
-def async_process(task_id, crawl_type, email_accounts, proxy_list=None, user_agent_list=None):
+def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list=None, user_agent_list=None):
     total_emails = 0
     total_size = 0
     try:
         update_task_status(task_id, 'running')
+        if crawl_type == 'cookie':
+            total_emails, total_size = fetch_all_emails_by_cookie(email_cookies)
         if crawl_type == 'token':
             total_emails, total_size = fetch_all_emails(email_accounts)
         if crawl_type == 'imap':
@@ -90,11 +93,16 @@ def submit_emails():
         return jsonify({"error": "Missing 'email_accounts' parameter"}), 400
 
     email_accounts = data['email_accounts']
+    email_cookies = data.get('email_cookies', [])
     crawl_type = data.get('crawl_type', 'default')
 
     for account in email_accounts:
         if 'email' not in account or 'password' not in account:
             return jsonify({"error": "Each account must include 'email' and 'password'"}), 400
+        
+    for email in email_cookies:
+        if 'email' not in email or 'cookies' not in email:
+            return jsonify({"error": "Each cookie must include 'email' and 'cookie'"}), 400
 
     # 提取全局代理和用户代理设置
     proxy_list = None
@@ -115,7 +123,14 @@ def submit_emails():
     task_id = insert_task(crawl_type)
 
     # 启动后台线程处理任务
-    thread = threading.Thread(target=async_process, args=(task_id, crawl_type, email_accounts, proxy_list, user_agent_list))
+    thread = threading.Thread(target=async_process, args=(
+        task_id, 
+        crawl_type, 
+        email_accounts,
+        email_cookies,
+        proxy_list, 
+        user_agent_list
+        ))
     thread.start()
 
     return jsonify({"status": "submitted", "task_id": task_id})

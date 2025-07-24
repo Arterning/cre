@@ -1,0 +1,4 @@
+*.txt
+exportmail
+__pycache__
+*.pyc
