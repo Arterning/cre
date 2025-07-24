@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_file
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
-from lx import fetch_all_emails
+from token_crawl import fetch_all_emails
 from cookie_crawl import fetch_all_emails_by_cookie
 import threading
 import traceback
