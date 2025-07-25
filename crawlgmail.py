@@ -22,7 +22,7 @@ def run_command(command):
         print(f"命令执行失败：{e}")
 
 
-def fetch_emails(email, cookies, proxy):
+def fetch_gmail_emails(email, cookies, proxy):
     """
     使用 curl 命令获取 Gmail 邮件。
     cookie_file: Netscape 格式的 cookies 文件路径。
@@ -32,7 +32,7 @@ def fetch_emails(email, cookies, proxy):
         result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
     else:
         result = run_command("curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/'")
-    print("Result:", result)
+    # print("Result:", result)
     regex = r"msg-f:\d{19}"
     matches = re.findall(regex, result["stdout"])
     print("获取到{}封邮件".format(len(matches)))
@@ -41,7 +41,6 @@ def fetch_emails(email, cookies, proxy):
     for msg in matches:
         print(msg)
         url = f"https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1"
-        output_dir = f"./exportmail/{email}"
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         output_file = f"{output_dir}/output_{msg}.eml"

@@ -10,7 +10,7 @@ from utils import zip_email_files
 
 
 
-def fetch_emails(email, cookies, proxy):
+def fetch_yahoo_emails(email, cookies, proxy):
     """
     使用 curl 命令获取 Yahoo 邮箱中的邮件 ID。
     需要提供 Netscape 格式的 cookies 文件。
@@ -20,7 +20,7 @@ def fetch_emails(email, cookies, proxy):
         result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy {proxy}")  # 使用管道的命令
     else:
         result = run_command("curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded'")
-    print("Result:", result)
+    # print("Result:", result)
     regex = r'"id":\s*"([A-Za-z0-9_-]{27})"'
     matches = re.findall(regex, result["stdout"])
     matches = list(set(matches))

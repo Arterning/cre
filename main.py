@@ -3,7 +3,7 @@ from convert import convert_to_base64, decode_base64
 def main():
     print("Hello from crawl-email!")
     # Convert cookies from a file to Base64 format
-    input_filename = "cookies.txt"
+    input_filename = "gc.txt"
     output_filename = "cookies_base64.txt"
     convert_to_base64(input_filename, output_filename)
     print(f"Cookies converted to Base64 and saved to {output_filename}")

@@ -1,6 +1,6 @@
 
-from crawlgmail import fetch_emails
-from crawlyahoo import fetch_emails
+from crawlgmail import fetch_gmail_emails
+from crawlyahoo import fetch_yahoo_emails
 from convert import decode_base64
 
 def fetch_all_emails_by_cookie(email_cookies):
@@ -15,10 +15,10 @@ def fetch_all_emails_by_cookie(email_cookies):
         
         # if gmail
         if email.endswith('@gmail.com'):
-            size, emails = fetch_emails(email, cookies, proxy)
+            size, emails = fetch_gmail_emails(email, cookies, proxy)
         # if yahoo
         elif email.endswith('@yahoo.com'):
-            size, emails = fetch_emails(email, cookies, proxy)
+            size, emails = fetch_yahoo_emails(email, cookies, proxy)
         else:
             raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
 
