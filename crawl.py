@@ -366,7 +366,7 @@ def zip_email_files(email, output_dir):
     return total_size
 
 
-def process_email_accounts(email_accounts, output_dir="/tmp/outlook_emails", proxy_list=None, user_agent_list=None):
+def process_email_accounts(email_accounts, output_dir="/tmp/exportmail", proxy_list=None, user_agent_list=None):
     """处理多个邮箱账号"""
     create_directory(output_dir)
     total_emails = 0

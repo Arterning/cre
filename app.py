@@ -180,7 +180,7 @@ def download_file():
     if not email and not anchormailbox:
         return {"error": "缺少 email 或者 anchormailbox参数"}, 400
 
-    output_dir="/tmp/outlook_emails/"
+    output_dir="/tmp/exportmail/"
 
     if anchormailbox:
         file_path = os.path.join(output_dir, f"{anchormailbox}.zip")
@@ -192,7 +192,7 @@ def download_file():
 
     # 拼接文件路径
     #safe_email = email.replace("/", dd"_")  # 简单防止路径注入
-    #file_path = f"/tmp/outlook_emails/{safe_email}.zip"
+    #file_path = f"/tmp/exportmail/{safe_email}.zip"
 
     print("file_path", file_path)
      

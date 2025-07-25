@@ -233,7 +233,7 @@ def fetch_emails(usertoken, anchormailbox):
                 eml_content = "\n".join(str(eml).split("\n"))
                 all_emails.append((eml_filename, eml_content))
 
-    output_dir = "/tmp/outlook_emails/"
+    output_dir = "/tmp/exportmail/"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     zip_filename = os.path.join(output_dir, f"{anchormailbox}.zip")
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:

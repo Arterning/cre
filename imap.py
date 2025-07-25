@@ -27,7 +27,7 @@ class IMAPEmailDownloader:
 
         # 输出目录
         #self.base_output_dir = os.path.join(os.getcwd(), "emails")
-        self.base_output_dir = "/tmp/outlook_emails/"
+        self.base_output_dir = "/tmp/exportmail/"
         os.makedirs(self.base_output_dir, exist_ok=True)
 
     def setup_selenium(self):
