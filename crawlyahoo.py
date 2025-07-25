@@ -68,6 +68,7 @@ if __name__ == "__main__":
     filename = sys.argv[1]
     convert_to_netscape(filename)
     result = run_command("curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy http://172.17.120.142:7890")  # 使用管道的命令
+    print("Result:", result)
     regex = r'"id":\s*"([A-Za-z0-9_-]{27})"'
     matches = re.findall(regex, result["stdout"])
     matches = list(set(matches))

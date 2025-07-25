@@ -167,7 +167,7 @@ def download_file():
     # Check if email domain is supported
     supported_domains = {
         'outlook.com', 'gmail.com', 'tutamail.com', 
-        'murena.io', 'proton.me'
+        'murena.io', 'proton.me', 'yahoo.com',
     }
 
     if email:
