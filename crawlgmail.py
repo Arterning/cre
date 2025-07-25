@@ -28,7 +28,10 @@ def fetch_emails(email, cookies, proxy):
     cookie_file: Netscape 格式的 cookies 文件路径。
     """
     convert_cookies_to_netscape(cookies)
-    result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
+    if proxy:
+        result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
+    else:
+        result = run_command("curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/'")
     print("Result:", result)
     regex = r"msg-f:\d{19}"
     matches = re.findall(regex, result["stdout"])

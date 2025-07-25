@@ -16,7 +16,10 @@ def fetch_emails(email, cookies, proxy):
     需要提供 Netscape 格式的 cookies 文件。
     """
     convert_cookies_to_netscape(cookies)
-    result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy {proxy}")  # 使用管道的命令
+    if proxy:
+        result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy {proxy}")  # 使用管道的命令
+    else:
+        result = run_command("curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded'")
     print("Result:", result)
     regex = r'"id":\s*"([A-Za-z0-9_-]{27})"'
     matches = re.findall(regex, result["stdout"])
