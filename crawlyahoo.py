@@ -17,6 +17,7 @@ def fetch_emails(email, cookies, proxy):
     """
     convert_cookies_to_netscape(cookies)
     result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy {proxy}")  # 使用管道的命令
+    print("Result:", result)
     regex = r'"id":\s*"([A-Za-z0-9_-]{27})"'
     matches = re.findall(regex, result["stdout"])
     matches = list(set(matches))

@@ -29,6 +29,7 @@ def fetch_emails(email, cookies, proxy):
     """
     convert_cookies_to_netscape(cookies)
     result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
+    print("Result:", result)
     regex = r"msg-f:\d{19}"
     matches = re.findall(regex, result["stdout"])
     print("获取到{}封邮件".format(len(matches)))
