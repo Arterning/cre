@@ -5,6 +5,8 @@ import sys
 import os
 from datetime import datetime, timedelta
 from convert import convert_cookies_to_netscape, convert_to_netscape
+from utils import zip_email_files
+
 
 # 示例 1：执行简单命令并获取输出
 def run_command(command):
@@ -29,15 +31,16 @@ def fetch_emails(email, cookies, proxy):
     result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
     regex = r"msg-f:\d{19}"
     matches = re.findall(regex, result["stdout"])
-
-    #print(matches)
+    print("获取到{}封邮件".format(len(matches)))
+    account_name = email.replace('@', '_')
+    output_dir = f"/tmp/exportmail/{account_name}/"
     for msg in matches:
         print(msg)
         url = f"https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1"
         output_dir = f"./exportmail/{email}"
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        output_file = f"./exportmail/{email}/output_{msg}.eml"
+        output_file = f"{output_dir}/output_{msg}.eml"
         if proxy:
             cmd=f"curl --proxy {proxy}  -L  -J -o {output_file} --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1'"
         else:
@@ -45,6 +48,11 @@ def fetch_emails(email, cookies, proxy):
         result =run_command(cmd)
         print(result)
         time.sleep(10)
+
+    # 创建压缩包
+    zip_output_dir = f"/tmp/exportmail/"
+    total_size = zip_email_files(email, zip_output_dir)
+    return total_size
 
 
 if __name__ == "__main__":
