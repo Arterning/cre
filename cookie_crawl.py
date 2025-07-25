@@ -1,12 +1,15 @@
 
 from crawlgmail import fetch_emails
 from crawlyahoo import fetch_emails
+from convert import decode_base64
 
 def fetch_all_emails_by_cookie(email_cookies):
     total_emails = 0
     total_size = 0
     for account in email_cookies:
-        cookies = account['cookies']
+        cookies_base64 = account['cookies']
+        cookies = decode_base64(cookies_base64)
+        print(f"Decoded cookies for {account['email']}: {cookies}")
         email = account['email']
         proxy = account.get('proxy', None)
         

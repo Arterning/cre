@@ -1,0 +1,12 @@
+[project]
+name = "crawl-email"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "flask>=3.1.1",
+    "imapclient>=3.0.1",
+    "requests>=2.32.4",
+    "selenium>=4.34.2",
+]

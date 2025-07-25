@@ -89,10 +89,10 @@ def hello_world():
 def submit_emails():
     data = request.get_json()
 
-    if not data or 'email_accounts' not in data:
-        return jsonify({"error": "Missing 'email_accounts' parameter"}), 400
+    # if not data or 'email_accounts' not in data:
+    #     return jsonify({"error": "Missing 'email_accounts' parameter"}), 400
 
-    email_accounts = data['email_accounts']
+    email_accounts = data.get('email_accounts', [])
     email_cookies = data.get('email_cookies', [])
     crawl_type = data.get('crawl_type', 'default')
 

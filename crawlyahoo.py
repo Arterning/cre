@@ -22,8 +22,14 @@ def fetch_emails(email, cookies, proxy):
     print("获取到{}封邮件".format(len(matches)))
     for msg in matches:
         print(msg)
+        output_dir = f"./exportmail/{email}"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
         output_file = f"./exportmail/{email}/output_{msg}.eml"
-        cmd=f"curl --proxy {proxy}  -o {output_file} --cookie netscape-cookies.txt 'https://mail.yahoo.com/ws/v3/mailboxes/@/messages/@.id=={msg}/content/rawplaintext'"
+        if proxy:
+            cmd=f"curl --proxy {proxy}  -o {output_file} --cookie netscape-cookies.txt 'https://mail.yahoo.com/ws/v3/mailboxes/@/messages/@.id=={msg}/content/rawplaintext'"
+        else:
+            cmd=f"curl -o {output_file} --cookie netscape-cookies.txt 'https://mail.yahoo.com/ws/v3/mailboxes/@/messages/@.id=={msg}/content/rawplaintext'"
         result =run_command(cmd)
         print(result)
         time.sleep(10)

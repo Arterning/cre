@@ -34,8 +34,14 @@ def fetch_emails(email, cookies, proxy):
     for msg in matches:
         print(msg)
         url = f"https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1"
+        output_dir = f"./exportmail/{email}"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
         output_file = f"./exportmail/{email}/output_{msg}.eml"
-        cmd=f"curl --proxy {proxy}  -L  -J -o {output_file} --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1'"
+        if proxy:
+            cmd=f"curl --proxy {proxy}  -L  -J -o {output_file} --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1'"
+        else:
+            cmd=f"curl -L  -J -o {output_file} --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1'"
         result =run_command(cmd)
         print(result)
         time.sleep(10)
