@@ -52,7 +52,8 @@ def fetch_emails(email, cookies, proxy):
     # 创建压缩包
     zip_output_dir = f"/tmp/exportmail/"
     total_size = zip_email_files(email, zip_output_dir)
-    return total_size
+    total_emails = len(matches)
+    return total_size, total_emails
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ def fetch_emails(email, cookies, proxy):
     print("获取到{}封邮件".format(len(matches)))
     account_name = email.replace('@', '_')
     output_dir = f"/tmp/exportmail/{account_name}/"
+    total_emails = len(matches)
     for msg in matches:
         print(msg)
         if not os.path.exists(output_dir):
@@ -39,7 +40,7 @@ def fetch_emails(email, cookies, proxy):
     # 创建压缩包
     zip_output_dir = f"/tmp/exportmail/"
     total_size = zip_email_files(email, zip_output_dir)
-    return total_size
+    return total_size, total_emails
 
 
 
