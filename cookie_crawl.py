@@ -9,7 +9,7 @@ def fetch_all_emails_by_cookie(email_cookies):
     for account in email_cookies:
         cookies_base64 = account['cookies']
         cookies = decode_base64(cookies_base64)
-        print(f"Decoded cookies for {account['email']}: {cookies}")
+        # print(f"Decoded cookies for {account['email']}: {cookies}")
         email = account['email']
         proxy = account.get('proxy', None)
         
