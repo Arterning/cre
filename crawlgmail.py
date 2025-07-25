@@ -64,16 +64,17 @@ if __name__ == "__main__":
 
     filename = sys.argv[1]
     convert_to_netscape(filename)
-    result = run_command("curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy http://127.0.0.1:8080")  # 使用管道的命令
+    proxy="http://172.17.120.142:7890"
+    result = run_command("curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
     regex = r"msg-f:\d{19}"
     matches = re.findall(regex, result["stdout"])
 
-    #print(matches)
+    print(matches)
     for msg in matches:
         print(msg)
         url = f"https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1"
         output_file = f"./exportmail/output_{msg}.eml"
-        cmd=f"curl --proxy http://127.0.0.1:8080  -L  -J -o {output_file} --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1'"
+        cmd=f"curl --proxy {proxy}  -L  -J -o {output_file} --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1'"
         result =run_command(cmd)
         #regex_file = r"curl: Saved to filename '([^']+)'"
         print(result)
