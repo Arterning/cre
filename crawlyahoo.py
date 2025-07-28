@@ -8,7 +8,16 @@ from convert import convert_cookies_to_netscape, convert_to_netscape
 from utils import zip_email_files
 
 
-
+def list_yahoo_emails(cookies):
+    convert_cookies_to_netscape(cookies)
+    result = run_command("curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded'")
+    print("Result:", result)
+    regex = r'"id":\s*"([A-Za-z0-9_-]{27})"'
+    matches = re.findall(regex, result["stdout"])
+    if matches == 0:
+        print("没有找到邮件")
+        return 0
+    return len(matches)
 
 def fetch_yahoo_emails(email, cookies, proxy):
     """

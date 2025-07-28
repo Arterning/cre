@@ -22,6 +22,17 @@ def run_command(command):
         print(f"命令执行失败：{e}")
 
 
+def list_gmails(cookies):
+    convert_cookies_to_netscape(cookies)
+    result = run_command("curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/'")
+    print("Result:", result)
+    regex = r"msg-f:\d{19}"
+    matches = re.findall(regex, result["stdout"])
+    if matches == 0:
+        print("没有找到邮件")
+        return 0
+    return len(matches)
+
 def fetch_gmail_emails(email, cookies, proxy):
     """
     使用 curl 命令获取 Gmail 邮件。

@@ -3,6 +3,9 @@ from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
 from token_crawl import fetch_all_emails
 from cookie_crawl import fetch_all_emails_by_cookie
+from crawlgmail import list_gmails
+from crawlyahoo import list_yahoo_emails
+from convert import decode_base64
 import threading
 import traceback
 import sqlite3
@@ -83,6 +86,31 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
 @app.route("/")
 def hello_world():
     return "<p>running!</p>"
+
+@app.route('/validate_cookies', methods=['POST'])
+def validate_cookies():
+    data = request.get_json()
+    email_cookies = data.get('email_cookies', [])
+    for email in email_cookies:
+        if 'email' not in email or 'cookies' not in email:
+            return jsonify({"error": "Each cookie must include 'email' and 'cookie'"}), 400
+    response = []    
+    for email in email_cookies:
+        mails = 0
+        cookies = decode_base64(email['cookies'])
+        if email.endswith('@gmail.com'):
+            mails = list_gmails(cookies)
+        elif email.endswith('@yahoo.com'):
+            mails = list_yahoo_emails(cookies)
+        else:
+            raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
+        
+        if mails > 0:
+            response.append({"email": email['email'], "status": "valid"})
+        else:
+            response.append({"email": email['email'], "status": "invalid"})
+    return jsonify({"success": True})
+
 
 
 @app.route('/submit_emails', methods=['POST'])
