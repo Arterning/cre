@@ -59,11 +59,14 @@ def fetch_gmail_emails(email, cookies, proxy):
         if isinstance(proxy, str):
             result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
             valid_proxy = proxy
+            print("使用代理", proxy)
         if isinstance(proxy, list):
             for p in proxy:
+                print("尝试使用代理", p)
                 result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {p}")
                 matches = re.findall(regex, result["stdout"])
                 if matches > 0:
+                    print("代理可用，使用代理", p)
                     valid_proxy = p
                     break
     else:
