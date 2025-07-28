@@ -180,7 +180,7 @@ def submit_emails():
             cookies = decode_base64(email['cookies'])
         except Exception as e:
             print(f"Failed to decode cookies for {email_address}: {e}")
-            response.append({"email": email_address, "status": "invalid"})
+            response.append({"email": email_address, "status": "invalid", "error message": "cookie 验证不通过"})
             continue  # 如果解码失败，跳过这个邮箱
         
         if email_address.endswith('@gmail.com'):
