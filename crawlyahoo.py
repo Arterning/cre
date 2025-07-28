@@ -51,7 +51,7 @@ def fetch_yahoo_emails(email, cookies, proxy):
                 print("尝试使用代理", p)
                 result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy {p}")
                 matches = re.findall(regex, result["stdout"])
-                if matches > 0:
+                if len(matches) > 0:
                     print("代理可用，使用代理", p)
                     valid_proxy = p
                     break
