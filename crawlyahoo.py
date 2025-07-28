@@ -44,6 +44,10 @@ def fetch_yahoo_emails(email, cookies, proxy):
     else:
         result = run_command("curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded'")
     # print("Result:", result)
+    # save result to file
+    result_file = f'{email.replace('@', '_')}_result.txt'
+    with open(result_file, 'w') as f:
+        f.write(result)
     regex = r'"id":\s*"([A-Za-z0-9_-]{27})"'
     matches = re.findall(regex, result["stdout"])
     matches = list(set(matches))
