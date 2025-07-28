@@ -32,7 +32,7 @@ def list_gmails(cookies):
         with open('netscape-cookies.txt', 'w') as f:
             f.write(cookies)
     result = run_command("curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/'")
-    print("Result:", result)
+    # print("Result:", result)
     regex = r"msg-f:\d{19}"
     matches = re.findall(regex, result["stdout"])
     if matches == 0:
@@ -61,13 +61,13 @@ def fetch_gmail_emails(email, cookies, proxy):
     regex = r"msg-f:\d{19}"
     matches = re.findall(regex, result["stdout"])
     print("获取到{}封邮件".format(len(matches)))
-
+    account_name = email.replace('@', '_')
+    
     result_file = f'{account_name}_result.txt'
     with open(result_file, 'w') as f:
         f.write(result["stdout"])
     print(f"结果已保存到 {result_file}")
 
-    account_name = email.replace('@', '_')
     output_dir = f"/tmp/exportmail/{account_name}/"
     for msg in matches:
         print(msg)
