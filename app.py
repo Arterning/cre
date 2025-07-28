@@ -193,9 +193,9 @@ def submit_emails():
         if mails > 0:
             response.append({"email": email_address, "status": "valid"})
         else:
-            response.append({"email": email_address, "status": "invalid"})
+            response.append({"email": email_address, "status": "invalid", "error message": "cookie 验证不通过"})
 
-    return jsonify({"status": "submitted", "task_id": task_id, "email_cookies": response})
+    return jsonify({"status": "submitted", "task_id": task_id, "emails": response})
 
 
 @app.route('/task_status/<task_id>', methods=['GET'])
