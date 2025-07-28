@@ -31,7 +31,14 @@ def fetch_yahoo_emails(email, cookies, proxy):
     使用 curl 命令获取 Yahoo 邮箱中的邮件 ID。
     需要提供 Netscape 格式的 cookies 文件。
     """
-    convert_cookies_to_netscape(cookies)
+    if "✓" in cookies:
+        print("Cookies 不是 Netscape 格式，正在转换...")
+        convert_cookies_to_netscape(cookies)
+    else:
+        print("Cookies 已经是 Netscape 格式，无需转换。")
+        # save cookies to netscape-cookies.txt
+        with open('netscape-cookies.txt', 'w') as f:
+            f.write(cookies)
     if proxy:
         result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy {proxy}")  # 使用管道的命令
     else:
