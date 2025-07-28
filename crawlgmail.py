@@ -23,7 +23,14 @@ def run_command(command):
 
 
 def list_gmails(cookies):
-    convert_cookies_to_netscape(cookies)
+    if "✓" in cookies:
+        print("Cookies 不是 Netscape 格式，正在转换...")
+        convert_cookies_to_netscape(cookies)
+    else:
+        print("Cookies 已经是 Netscape 格式，无需转换。")
+        # save cookies to netscape-cookies.txt
+        with open('netscape-cookies.txt', 'w') as f:
+            f.write(cookies)
     result = run_command("curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/'")
     print("Result:", result)
     regex = r"msg-f:\d{19}"
