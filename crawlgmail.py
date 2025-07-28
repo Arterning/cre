@@ -61,6 +61,12 @@ def fetch_gmail_emails(email, cookies, proxy):
     regex = r"msg-f:\d{19}"
     matches = re.findall(regex, result["stdout"])
     print("获取到{}封邮件".format(len(matches)))
+
+    result_file = f'{account_name}_result.txt'
+    with open(result_file, 'w') as f:
+        f.write(result["stdout"])
+    print(f"结果已保存到 {result_file}")
+
     account_name = email.replace('@', '_')
     output_dir = f"/tmp/exportmail/{account_name}/"
     for msg in matches:
@@ -95,11 +101,18 @@ if __name__ == "__main__":
     convert_to_netscape(filename)
     proxy="http://172.17.120.142:7890"
     result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
-    print("Result:", result)
+    # print("Result:", result)
+
+    result_file = f'gmail_result.txt'
+    with open(result_file, 'w') as f:
+        f.write(result["stdout"])
+    print(f"结果已保存到 {result_file}")
+
     regex = r"msg-f:\d{19}"
     matches = re.findall(regex, result["stdout"])
 
-    print(matches)
+    # print(matches)
+    print("获取到{}封邮件".format(len(matches)))
     
     for msg in matches:
         print(msg)
