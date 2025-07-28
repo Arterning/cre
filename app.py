@@ -97,19 +97,26 @@ def validate_cookies():
     response = []    
     for email in email_cookies:
         mails = 0
-        cookies = decode_base64(email['cookies'])
-        if email.endswith('@gmail.com'):
+        email_address = email['email']
+        try :
+            cookies = decode_base64(email['cookies'])
+        except Exception as e:
+            print(f"Failed to decode cookies for {email_address}: {e}")
+            response.append({"email": email_address, "status": "invalid"})
+            continue  # 如果解码失败，跳过这个邮箱
+        
+        if email_address.endswith('@gmail.com'):
             mails = list_gmails(cookies)
-        elif email.endswith('@yahoo.com'):
+        elif email_address.endswith('@yahoo.com'):
             mails = list_yahoo_emails(cookies)
         else:
             raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
         
         if mails > 0:
-            response.append({"email": email['email'], "status": "valid"})
+            response.append({"email": email_address, "status": "valid"})
         else:
-            response.append({"email": email['email'], "status": "invalid"})
-    return jsonify({"success": True})
+            response.append({"email": email_address, "status": "invalid"})
+    return jsonify(response)
 
 
 
