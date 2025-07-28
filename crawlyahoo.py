@@ -31,6 +31,8 @@ def fetch_yahoo_emails(email, cookies, proxy):
     使用 curl 命令获取 Yahoo 邮箱中的邮件 ID。
     需要提供 Netscape 格式的 cookies 文件。
     """
+    regex = r'"id":\s*"([A-Za-z0-9_-]{27})"'
+    valid_proxy = ""
     if "✓" in cookies:
         print("Cookies 不是 Netscape 格式，正在转换...")
         convert_cookies_to_netscape(cookies)
@@ -40,13 +42,25 @@ def fetch_yahoo_emails(email, cookies, proxy):
         with open('netscape-cookies.txt', 'w') as f:
             f.write(cookies)
     if proxy:
-        result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy {proxy}")  # 使用管道的命令
+        if isinstance(proxy, str):
+            result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy {proxy}")  # 使用管道的命令
+            valid_proxy = proxy
+            print("使用代理", proxy)
+        if isinstance(proxy, list):
+            for p in proxy:
+                print("尝试使用代理", p)
+                result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded' --proxy {p}")
+                matches = re.findall(regex, result["stdout"])
+                if matches > 0:
+                    print("代理可用，使用代理", p)
+                    valid_proxy = p
+                    break
     else:
         result = run_command("curl --cookie netscape-cookies.txt 'https://mail.yahoo.com/d/folders/1?reason=onboarded'")
     # print("Result:", result)
     # save result to file
     
-    regex = r'"id":\s*"([A-Za-z0-9_-]{27})"'
+    
     matches = re.findall(regex, result["stdout"])
     matches = list(set(matches))
     print("获取到{}封邮件".format(len(matches)))
@@ -64,8 +78,8 @@ def fetch_yahoo_emails(email, cookies, proxy):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         output_file = f"{output_dir}/output_{msg}.eml"
-        if proxy:
-            cmd=f"curl --proxy {proxy}  -o {output_file} --cookie netscape-cookies.txt 'https://mail.yahoo.com/ws/v3/mailboxes/@/messages/@.id=={msg}/content/rawplaintext'"
+        if valid_proxy:
+            cmd=f"curl --proxy {valid_proxy}  -o {output_file} --cookie netscape-cookies.txt 'https://mail.yahoo.com/ws/v3/mailboxes/@/messages/@.id=={msg}/content/rawplaintext'"
         else:
             cmd=f"curl -o {output_file} --cookie netscape-cookies.txt 'https://mail.yahoo.com/ws/v3/mailboxes/@/messages/@.id=={msg}/content/rawplaintext'"
         result =run_command(cmd)

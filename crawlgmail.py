@@ -45,6 +45,8 @@ def fetch_gmail_emails(email, cookies, proxy):
     使用 curl 命令获取 Gmail 邮件。
     cookie_file: Netscape 格式的 cookies 文件路径。
     """
+    regex = r"msg-f:\d{19}"
+    valid_proxy = ""
     if "✓" in cookies:
         print("Cookies 不是 Netscape 格式，正在转换...")
         convert_cookies_to_netscape(cookies)
@@ -54,11 +56,21 @@ def fetch_gmail_emails(email, cookies, proxy):
         with open('netscape-cookies.txt', 'w') as f:
             f.write(cookies)
     if proxy:
-        result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
+        if isinstance(proxy, str):
+            result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {proxy}")  # 使用管道的命令
+            valid_proxy = proxy
+        if isinstance(proxy, list):
+            for p in proxy:
+                result = run_command(f"curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/' --proxy {p}")
+                matches = re.findall(regex, result["stdout"])
+                if matches > 0:
+                    valid_proxy = p
+                    break
     else:
         result = run_command("curl --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/'")
+    
     # print("Result:", result)
-    regex = r"msg-f:\d{19}"
+    
     matches = re.findall(regex, result["stdout"])
     print("获取到{}封邮件".format(len(matches)))
     account_name = email.replace('@', '_')
@@ -75,8 +87,8 @@ def fetch_gmail_emails(email, cookies, proxy):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         output_file = f"{output_dir}/output_{msg}.eml"
-        if proxy:
-            cmd=f"curl --proxy {proxy}  -L  -J -o {output_file} --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1'"
+        if valid_proxy:
+            cmd=f"curl --proxy {valid_proxy}  -L  -J -o {output_file} --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1'"
         else:
             cmd=f"curl -L  -J -o {output_file} --cookie netscape-cookies.txt 'https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1'"
         result =run_command(cmd)
