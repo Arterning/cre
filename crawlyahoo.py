@@ -56,7 +56,8 @@ def fetch_yahoo_emails(email, cookies, proxy):
 
     result_file = f'{account_name}_result.txt'
     with open(result_file, 'w') as f:
-        f.write(result)
+        f.write(result["stdout"])
+    print(f"结果已保存到 {result_file}")
 
     for msg in matches:
         print(msg)
