@@ -73,6 +73,10 @@ def fetch_yahoo_emails(email, cookies, proxy):
         f.write(result["stdout"])
     print(f"结果已保存到 {result_file}")
 
+    if total_emails == 0:
+        print("没有找到邮件")
+        return 0, 0
+
     for msg in matches:
         print(msg)
         if not os.path.exists(output_dir):

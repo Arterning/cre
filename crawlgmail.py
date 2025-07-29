@@ -84,6 +84,11 @@ def fetch_gmail_emails(email, cookies, proxy):
     print(f"结果已保存到 {result_file}")
 
     output_dir = f"/tmp/exportmail/{account_name}/"
+
+    if not matches:
+        print("没有找到邮件")
+        return 0, 0
+
     for msg in matches:
         print(msg)
         url = f"https://mail.google.com/mail/u/0/?view=att&permmsgid={msg}&disp=comp&safe=1"

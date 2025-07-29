@@ -76,8 +76,11 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
                 proxy_list=proxy_list, 
                 user_agent_list=user_agent_list
             )
-            print("任务完成, 总邮件数:", total_emails, "总大小:", total_size)
-        update_task_status(task_id=task_id, status='finished', error=None, total_emails=total_emails, total_size=total_size)
+        print("任务完成, 总邮件数:", total_emails, "总大小:", total_size)
+        error = None
+        if total_emails == 0:
+            error = "没有找到任何邮件，请检查登录信息或 cookies 是否正确。"
+        update_task_status(task_id=task_id, status='finished', error=error, total_emails=total_emails, total_size=total_size)
     except Exception as e:
         traceback.print_exc()
         update_task_status(task_id, 'failed', str(e))
