@@ -38,6 +38,7 @@ def fetch_murena_emails(email, cookies, proxy):
     }
     regex1 = r'"accountHash":"([a-f0-9]{40})"'
     regex2 = r'"token":"([a-f0-9-]{42})"'
+    cookiedata = f"__Host-nc_sameSiteCookielax=true; __Host-nc_sameSiteCookiestrict=true;"
     if "✓" in cookies:
         print("Cookies 不是 Netscape 格式，正在转换...")
         convert_cookies_to_netscape(cookies)
@@ -49,13 +50,15 @@ def fetch_murena_emails(email, cookies, proxy):
 
     if proxy:
         if isinstance(proxy, str):
-            result = run_command(f"curl --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/AppData/' --proxy {proxy}")  # 使用管道的命令
+            cmd = f"curl --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/AppData/' --cookie '{cookiedata}' --proxy {proxy}"
+            result = run_command(cmd)  # 使用管道的命令
             valid_proxy = proxy
             print("使用代理", proxy)
         if isinstance(proxy, list):
             for p in proxy:
                 print("尝试使用代理", p)
-                result = run_command(f"curl --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/AppData/' --proxy {p}")
+                cmd = f"curl --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/AppData/' --cookie '{cookiedata}' --proxy {p}"
+                result = run_command(cmd)
                 regex1 = r'"accountHash":"([a-f0-9]{40})"'
                 regex2 = r'"token":"([a-f0-9-]{42})"'
                 accountHash = re.findall(regex1, result["stdout"])
@@ -101,6 +104,9 @@ def fetch_murena_emails(email, cookies, proxy):
 
     account_name = email.replace('@', '_')
     output_dir = f"/tmp/exportmail/{account_name}/"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    print("输出目录为：", output_dir)
     for i in range(int(uid)):
         print("正在收取第{}封邮件".format(i+1))
         output_file = f"{output_dir}/output_{i+1}.eml"

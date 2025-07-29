@@ -187,6 +187,8 @@ def submit_emails():
             mails = list_gmails(cookies)
         elif email_address.endswith('@yahoo.com'):
             mails = list_yahoo_emails(cookies)
+        elif email_address.endswith('@murena.io'):
+            pass
         else:
             raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
         
