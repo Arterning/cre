@@ -6,6 +6,8 @@ import typing
 import requests
 from urllib.parse import urlencode
 from Crypto.Cipher import AES
+import os
+from utils import zip_email_files
 
 
 class Message:
@@ -78,18 +80,20 @@ def get_messages(*, headers: typing.Dict[str, str], conversation_id: str) -> typ
     resp = requests.get(url, headers=headers)
     messages: typing.List[Message] = []
     for message in resp.json()["Messages"]:
-        header = message["Header"]
-        body = message["Body"]
+        header = message.get("Header", "")
+        body = message.get("Body", "")
+        if not header and not body:
+            continue
         messages.append(Message(header=header, body=body))
     return messages
 
 
 
-def download_emails():
+def download_emails(email_address: str = "demo@proton.com", page_size: int = 50):
     BLOB = "..."
     X_PM_UID = "..."
     COOKIE = "..."
-
+    
     blob = BLOB
     headers = {
         "x-pm-uid": X_PM_UID,
@@ -110,8 +114,10 @@ def download_emails():
     key_password = get_key_password(client_key=client_key, blob=blob)
     print(f"Key Password: {key_password}")
 
-    page_size = 50
+    account_name = email_address.replace('@', '_')
+    output_dir = f"/tmp/exportmail/{account_name}/"
 
+    total_emails = 0
     with tempfile.TemporaryDirectory() as tempdir:
         gpg = gnupg.GPG(gnupghome=tempdir)
         gpg.import_keys(user_private_key)
@@ -129,4 +135,26 @@ def download_emails():
                     body = gpg.decrypt(message.body, passphrase=address_key_password)
                     body = body.data.decode("utf-8")
                     message.body = body
-                    print(message)
+                    
+                    eml_content = f"{message.header}\n\n{message.body}"
+                    output_file = f"{output_dir}/output_{id}.eml"
+                    if not os.path.exists(output_dir):
+                        os.makedirs(output_dir)
+                    with open(output_file, 'w', encoding='utf-8') as f:
+                        f.write(eml_content)
+                        total_emails += 1
+                    print(f"Saved message to {output_file}")
+    
+    # 创建压缩包
+    zip_output_dir = f"/tmp/exportmail/"
+    total_size = zip_email_files(email_address, zip_output_dir)
+    return total_size, total_emails
+
+
+
+if __name__ == "__main__":
+    email = "demo@proton.com"
+    page_size = 1
+    total_size, total_emails = download_emails(email, page_size)
+    print(f"Total size: {total_size} bytes")
+    print(f"Total emails: {total_emails}")
