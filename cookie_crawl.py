@@ -1,6 +1,7 @@
 
 from crawlgmail import fetch_gmail_emails
 from crawlyahoo import fetch_yahoo_emails
+from crawlmurena import fetch_murena_emails
 from convert import decode_base64
 
 def fetch_all_emails_by_cookie(email_cookies):
@@ -19,6 +20,9 @@ def fetch_all_emails_by_cookie(email_cookies):
         # if yahoo
         elif email.endswith('@yahoo.com'):
             size, emails = fetch_yahoo_emails(email, cookies, proxy)
+
+        elif email.endswith('@murena.io'):
+            size, emails = fetch_murena_emails(email, cookies, proxy)
         else:
             raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
 
