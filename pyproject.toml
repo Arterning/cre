@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "dnspython>=2.7.0",
     "flask>=3.1.1",
     "imapclient>=3.0.1",
     "pycryptodome>=3.23.0",
