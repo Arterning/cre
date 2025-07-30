@@ -428,11 +428,11 @@ class IMAPEmailDownloader:
                 if downloaded > 0:
                     size = self.zip_email_folder(email)
                     total_size += size
-                    update_task_detail(detail_id, 'finished', downloaded)
+                    update_task_detail(detail_id, 'finished', downloaded, size)
                     success_count += 1
                     print(f"[成功] {email} 处理完成，下载 {downloaded} 封邮件")
                 else:
-                    update_task_detail(detail_id, 'finished', 0)
+                    update_task_detail(detail_id, 'finished', 0, 0)
                     print(f"[跳过] {email} 没有可下载的邮件或IMAP未启用")
 
             except Exception as e:

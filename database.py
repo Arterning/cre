@@ -28,6 +28,7 @@ def init_db():
             end_time TIMESTAMP,
             status TEXT,
             email_count INTEGER DEFAULT 0,
+            total_size INTEGER DEFAULT 0,
             error TEXT,
             FOREIGN KEY (task_id) REFERENCES tasks (id)
         )
@@ -62,11 +63,11 @@ def insert_task_detail(task_id, email):
     conn.close()
     return detail_id
 
-def update_task_detail(detail_id, status, email_count=0, error=None):
+def update_task_detail(detail_id, status, email_count=0, total_size=0, error=None):
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
-    c.execute('UPDATE task_details SET status = ?, email_count = ?, error = ?, end_time = ? WHERE id = ?',
-              (status, email_count, error, end_time, detail_id))
+    c.execute('UPDATE task_details SET status = ?, email_count = ?, total_size = ?, error = ?, end_time = ? WHERE id = ?',
+              (status, email_count, total_size, error, end_time, detail_id))
     conn.commit()
     conn.close()

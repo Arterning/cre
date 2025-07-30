@@ -390,10 +390,11 @@ def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail"
             downloaded = process_email_account(email, password, output_dir, account_proxy_list, account_user_agent_list)
             total_emails += downloaded
 
+            size = 0
             if downloaded > 0:
                 size = zip_email_files(email, output_dir)
                 total_size += size
-            update_task_detail(detail_id, 'finished', downloaded)
+            update_task_detail(detail_id, 'finished', downloaded, size)
         except Exception as e:
             traceback.print_exc()
             update_task_detail(detail_id, 'failed', error=str(e))

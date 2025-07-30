@@ -35,7 +35,7 @@ def fetch_all_emails_by_cookie(task_id, email_cookies):
 
             total_emails += emails
             total_size += size
-            update_task_detail(detail_id, 'finished', emails)
+            update_task_detail(detail_id, 'finished', emails, size)
         except Exception as e:
             traceback.print_exc()
             update_task_detail(detail_id, 'failed', error=str(e))

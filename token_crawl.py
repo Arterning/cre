@@ -258,7 +258,7 @@ def fetch_all_emails(task_id, email_accounts):
             emails_count, size = fetch_emails(token, anchormailbox)
             total_emails += emails_count
             total_size += size
-            update_task_detail(detail_id, 'finished', emails_count)
+            update_task_detail(detail_id, 'finished', emails_count, size)
         except Exception as e:
             traceback.print_exc()
             update_task_detail(detail_id, 'failed', error=str(e))
