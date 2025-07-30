@@ -235,6 +235,7 @@ def download_file():
     supported_domains = {
         'outlook.com', 'gmail.com', 'tutamail.com', 
         'murena.io', 'proton.me', 'yahoo.com',
+        'ymail.com', 'rocketmail.com', 'yahoo.com.cn', 'yahoo.cn',
     }
 
     if email:

@@ -18,7 +18,7 @@ def fetch_all_emails_by_cookie(email_cookies):
         if email.endswith('@gmail.com'):
             size, emails = fetch_gmail_emails(email, cookies, proxy)
         # if yahoo
-        elif email.endswith('@yahoo.com'):
+        elif email.endswith('@yahoo.com') or email.endswith('@ymail.com') or email.endswith('@rocketmail.com') or email.endswith('@yahoo.com.cn') or email.endswith('@yahoo.cn'):
             size, emails = fetch_yahoo_emails(email, cookies, proxy)
 
         elif email.endswith('@murena.io'):
