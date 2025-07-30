@@ -6,6 +6,8 @@ import json
 import typing
 import base64
 from urllib.parse import quote
+from database import insert_task_detail, update_task_detail
+import traceback
 
 class UserSession:
     usertoken: str
@@ -209,6 +211,7 @@ def fetch_emails(usertoken, anchormailbox):
     )
     folders = fetch_folders(user=user)
     all_emails = []
+    total_size = 0
     for folder in folders:
         if not all([
             folder.total_count > 0,
@@ -226,34 +229,39 @@ def fetch_emails(usertoken, anchormailbox):
             for item in conversation.item_ids:
                 print(f"Conversation: {conversation.conversation_id}, Item ID: {item}")
                 eml = fetch_item(user=user, item_id=item)
-                print("########")
-                print("\n".join(str(eml).split("\n"))[:3])
-                print("########")
                 eml_filename = f"conv_{conversation.conversation_id}_item_{item}.eml"
-                eml_content = "\n".join(str(eml).split("\n"))
+                eml_content = str(eml)
                 all_emails.append((eml_filename, eml_content))
+                total_size += len(eml_content)
 
     output_dir = "/tmp/exportmail/"
+    os.makedirs(output_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     zip_filename = os.path.join(output_dir, f"{anchormailbox}.zip")
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for eml_filename, eml_content in all_emails:
             zipf.writestr(eml_filename, eml_content)
     print(f"All EML files have been saved to {zip_filename}")
+    return len(all_emails), total_size
 
 
-def fetch_all_emails(email_accounts):
+
+def fetch_all_emails(task_id, email_accounts):
     total_emails = 0
     total_size = 0
     for account in email_accounts:
-        token = account['password']
-        anchormailbox = account['email']
-        fetch_emails(token, anchormailbox)
-
-    import random
-    random_number = random.randint(5, 10)
-    total_emails = random_number
-    total_size = random.randint(5, 10) * 1024
+        email = account['email']
+        detail_id = insert_task_detail(task_id, email)
+        try:
+            token = account['password']
+            anchormailbox = account['email']
+            emails_count, size = fetch_emails(token, anchormailbox)
+            total_emails += emails_count
+            total_size += size
+            update_task_detail(detail_id, 'finished', emails_count)
+        except Exception as e:
+            traceback.print_exc()
+            update_task_detail(detail_id, 'failed', error=str(e))
     return total_emails, total_size
 
 

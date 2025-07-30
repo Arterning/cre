@@ -14,8 +14,12 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import random
 
 
+from database import insert_task_detail, update_task_detail
+import traceback
+
 class IMAPEmailDownloader:
-    def __init__(self):
+    def __init__(self, task_id):
+        self.task_id = task_id
         # OAuth 配置
         self.client_id = "000000004C12142B"
         self.client_secret = "enA0CwXg0B9olTrXGnm6ucdqWv7WkdXc"
@@ -409,6 +413,7 @@ class IMAPEmailDownloader:
         for index, account in enumerate(accounts, start=1):
             email = account['email']
             password = account['password']
+            detail_id = insert_task_detail(self.task_id, email)
 
             # 获取账号特定的代理和用户代理设置
             proxy_list = account.get('proxy_list', account.get('proxy', None))
@@ -423,15 +428,18 @@ class IMAPEmailDownloader:
                 if downloaded > 0:
                     size = self.zip_email_folder(email)
                     total_size += size
-
+                    update_task_detail(detail_id, 'finished', downloaded)
                     success_count += 1
                     print(f"[成功] {email} 处理完成，下载 {downloaded} 封邮件")
                 else:
+                    update_task_detail(detail_id, 'finished', 0)
                     print(f"[跳过] {email} 没有可下载的邮件或IMAP未启用")
 
             except Exception as e:
                 failed_accounts.append((email, str(e)))
                 print(f"[失败] {email} 处理出错: {str(e)}")
+                update_task_detail(detail_id, 'failed', error=str(e))
+
 
         # 输出汇总报告
         print("\n" + "=" * 50)

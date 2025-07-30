@@ -11,6 +11,8 @@ import zipfile
 import argparse
 from datetime import datetime
 import random
+from database import insert_task_detail, update_task_detail
+import traceback
 
 
 def create_directory(path):
@@ -366,7 +368,10 @@ def zip_email_files(email, output_dir):
     return total_size
 
 
-def process_email_accounts(email_accounts, output_dir="/tmp/exportmail", proxy_list=None, user_agent_list=None):
+from database import insert_task_detail, update_task_detail
+import traceback
+
+def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail", proxy_list=None, user_agent_list=None):
     """处理多个邮箱账号"""
     create_directory(output_dir)
     total_emails = 0
@@ -375,17 +380,24 @@ def process_email_accounts(email_accounts, output_dir="/tmp/exportmail", proxy_l
     for account in email_accounts:
         email = account['email']
         password = account['password']
+        detail_id = insert_task_detail(task_id, email)
         
         # 获取账号特定的代理和用户代理设置，如果没有则使用全局设置
         account_proxy_list = account.get('proxy', proxy_list)
         account_user_agent_list = account.get('ua', user_agent_list)
 
-        downloaded = process_email_account(email, password, output_dir, account_proxy_list, account_user_agent_list)
-        total_emails += downloaded
+        try:
+            downloaded = process_email_account(email, password, output_dir, account_proxy_list, account_user_agent_list)
+            total_emails += downloaded
 
-        if downloaded > 0:
-            size = zip_email_files(email, output_dir)
-            total_size += size
+            if downloaded > 0:
+                size = zip_email_files(email, output_dir)
+                total_size += size
+            update_task_detail(detail_id, 'finished', downloaded)
+        except Exception as e:
+            traceback.print_exc()
+            update_task_detail(detail_id, 'failed', error=str(e))
+
 
     print(f"\n所有邮箱账号处理完成，共下载 {total_emails} 封邮件， 总大小：{total_size} 字节")
     return total_emails, total_size
