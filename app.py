@@ -14,49 +14,10 @@ import os
 import uuid
 import time
 import zipfile
+from database import init_db, insert_task, update_task_status, DB_PATH
 
 
 app = Flask(__name__)
-DB_PATH = 'tasks.db'
-
-
-# 初始化数据库（只执行一次）
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS tasks (
-            id TEXT PRIMARY KEY,
-            crawl_type TEXT,
-            status TEXT,
-            total_emails INTEGER DEFAULT 0,
-            total_size INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            error TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-
-# 插入任务记录
-def insert_task(crawl_type):
-    task_id = str(uuid.uuid4())
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('INSERT INTO tasks (id, crawl_type, status) VALUES (?, ?, ?)', (task_id, crawl_type, 'pending'))
-    conn.commit()
-    conn.close()
-    return task_id
-
-
-# 更新任务状态
-def update_task_status(task_id, status, error=None, total_emails=0, total_size=0):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('UPDATE tasks SET status = ?, error = ?, total_emails = ?, total_size = ? WHERE id = ?', (status, error, total_emails, total_size, task_id))
-    conn.commit()
-    conn.close()
 
 
 def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list=None, user_agent_list=None):
@@ -65,14 +26,15 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
     try:
         update_task_status(task_id, 'running')
         if crawl_type == 'cookie':
-            total_emails, total_size = fetch_all_emails_by_cookie(email_cookies)
+            total_emails, total_size = fetch_all_emails_by_cookie(task_id, email_cookies)
         if crawl_type == 'token':
-            total_emails, total_size = fetch_all_emails(email_accounts)
+            total_emails, total_size = fetch_all_emails(task_id, email_accounts)
         if crawl_type == 'imap':
-            email_downloader = IMAPEmailDownloader()
+            email_downloader = IMAPEmailDownloader(task_id)
             total_emails, total_size = email_downloader.process_accounts(email_accounts)
         if crawl_type == 'default':
             total_emails, total_size = process_email_accounts(
+                task_id,
                 email_accounts, 
                 proxy_list=proxy_list, 
                 user_agent_list=user_agent_list
@@ -134,6 +96,7 @@ def submit_emails():
     email_accounts = data.get('email_accounts', [])
     email_cookies = data.get('email_cookies', [])
     crawl_type = data.get('crawl_type', 'default')
+    unique_code = data.get('unique_code')
 
     for account in email_accounts:
         if 'email' not in account or 'password' not in account:
@@ -159,7 +122,7 @@ def submit_emails():
         user_agent_list = [data['user_agent']] if data['user_agent'] else None
 
     # 创建任务记录并获取任务 ID
-    task_id = insert_task(crawl_type)
+    task_id = insert_task(crawl_type, unique_code)
 
     # 启动后台线程处理任务
     thread = threading.Thread(target=async_process, args=(
@@ -203,29 +166,47 @@ def submit_emails():
         else:
             response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
 
-    return jsonify({"status": "submitted", "task_id": task_id, "emails": response})
+    return jsonify({"status": "submitted", "task_id": task_id, "unique_code": unique_code, "emails": response})
 
 
 @app.route('/task_status/<task_id>', methods=['GET'])
 def get_task_status(task_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('SELECT id, crawl_type, status, total_emails, total_size, created_at, error FROM tasks WHERE id = ?', (task_id,))
+    c.execute('SELECT id, unique_code, crawl_type, status, total_emails, total_size, created_at, error FROM tasks WHERE id = ?', (task_id,))
     row = c.fetchone()
+    
+    if not row:
+        conn.close()
+        return jsonify({"error": "Task not found"}), 404
+
+    task_data = {
+        "task_id": row[0],
+        "unique_code": row[1],
+        "crawl_type": row[2],
+        "status": row[3],
+        "total_emails": row[4],
+        "total_size": row[5],
+        "created_at": row[6],
+        "error": row[7],
+        "details": []
+    }
+
+    c.execute('SELECT email, start_time, end_time, status, email_count, error FROM task_details WHERE task_id = ?', (task_id,))
+    details_rows = c.fetchall()
     conn.close()
 
-    if row:
-        return jsonify({
-            "task_id": row[0],
-            "crawl_type": row[1],
-            "status": row[2],
-            "total_emails": row[3],
-            "total_size": row[4],
-            "created_at": row[5],
-            "error": row[6]
+    for detail_row in details_rows:
+        task_data["details"].append({
+            "email": detail_row[0],
+            "start_time": detail_row[1],
+            "end_time": detail_row[2],
+            "status": detail_row[3],
+            "email_count": detail_row[4],
+            "error": detail_row[5]
         })
-    else:
-        return jsonify({"error": "Task not found"}), 404
+
+    return jsonify(task_data)
 
 
 @app.route('/download', methods=['GET'])
