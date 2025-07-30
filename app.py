@@ -6,6 +6,7 @@ from cookie_crawl import fetch_all_emails_by_cookie
 from crawlgmail import list_gmails
 from crawlyahoo import list_yahoo_emails
 from convert import decode_base64
+from mx import get_email_provider_type
 import threading
 import traceback
 import sqlite3
@@ -186,11 +187,13 @@ def submit_emails():
             response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
             continue  # 如果解码失败，跳过这个邮箱
         
-        if email_address.endswith('@gmail.com'):
+        provider = get_email_provider_type(email_address)
+
+        if "Google Mail" in provider or "Gmail" in provider:
             mails = list_gmails(cookies)
-        elif email_address.endswith('@yahoo.com'):
+        elif "Yahoo Mail" in provider or "Yahoo" in provider:
             mails = list_yahoo_emails(cookies)
-        elif email_address.endswith('@murena.io'):
+        elif "Murena Mail" in provider or "Murena" in provider:
             pass
         else:
             raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
@@ -242,7 +245,9 @@ def download_file():
         email_domain = email.split('@')[-1].lower() if '@' in email else ''
 
         if email_domain not in supported_domains:
-            return {"error": "不支持的邮箱类型"}, 400
+            provider = get_email_provider_type(email)  # 调用函数获取邮箱类型
+            if "未知" in provider:
+                return {"error": "不支持的邮箱类型"}, 400
 
 
     if not email and not anchormailbox:
