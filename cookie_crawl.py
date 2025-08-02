@@ -12,7 +12,8 @@ def fetch_all_emails_by_cookie(task_id, email_cookies):
     total_size = 0
     for account in email_cookies:
         email = account['email']
-        detail_id = insert_task_detail(task_id, email)
+        unique_code = account.get('unique_code')
+        detail_id = insert_task_detail(task_id, email, unique_code)
         try:
             cookies_base64 = account['cookies']
             cookies = decode_base64(cookies_base64)

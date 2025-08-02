@@ -251,7 +251,8 @@ def fetch_all_emails(task_id, email_accounts):
     total_size = 0
     for account in email_accounts:
         email = account['email']
-        detail_id = insert_task_detail(task_id, email)
+        unique_code = account.get('unique_code')
+        detail_id = insert_task_detail(task_id, email, unique_code)
         try:
             token = account['password']
             anchormailbox = account['email']

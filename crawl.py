@@ -380,7 +380,8 @@ def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail"
     for account in email_accounts:
         email = account['email']
         password = account['password']
-        detail_id = insert_task_detail(task_id, email)
+        unique_code = account.get('unique_code')
+        detail_id = insert_task_detail(task_id, email, unique_code)
         
         # 获取账号特定的代理和用户代理设置，如果没有则使用全局设置
         account_proxy_list = account.get('proxy', proxy_list)

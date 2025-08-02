@@ -96,7 +96,6 @@ def submit_emails():
     email_accounts = data.get('email_accounts', [])
     email_cookies = data.get('email_cookies', [])
     crawl_type = data.get('crawl_type', 'default')
-    unique_code = data.get('unique_code')
 
     for account in email_accounts:
         if 'email' not in account or 'password' not in account:
@@ -122,7 +121,7 @@ def submit_emails():
         user_agent_list = [data['user_agent']] if data['user_agent'] else None
 
     # 创建任务记录并获取任务 ID
-    task_id = insert_task(crawl_type, unique_code)
+    task_id = insert_task(crawl_type)
 
     # 启动后台线程处理任务
     thread = threading.Thread(target=async_process, args=(
@@ -166,7 +165,7 @@ def submit_emails():
         else:
             response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
 
-    return jsonify({"status": "submitted", "task_id": task_id, "unique_code": unique_code, "emails": response})
+    return jsonify({"status": "submitted", "task_id": task_id, "emails": response})
 
 
 @app.route('/task_status/<task_id>', methods=['GET'])
@@ -192,7 +191,7 @@ def get_task_status(task_id):
         "details": []
     }
 
-    c.execute('SELECT email, start_time, end_time, status, email_count, total_size, error FROM task_details WHERE task_id = ?', (task_id,))
+    c.execute('SELECT email, start_time, end_time, status, email_count, total_size, error, unique_code FROM task_details WHERE task_id = ?', (task_id,))
     details_rows = c.fetchall()
     conn.close()
 
@@ -204,7 +203,8 @@ def get_task_status(task_id):
             "status": detail_row[3],
             "email_count": detail_row[4],
             "total_size": detail_row[5],
-            "error": detail_row[6]
+            "error": detail_row[6],
+            "unique_code": detail_row[7]
         })
 
     return jsonify(task_data)

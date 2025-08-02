@@ -23,6 +23,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS task_details (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             task_id TEXT,
+            unique_code TEXT,
             email TEXT,
             start_time TIMESTAMP,
             end_time TIMESTAMP,
@@ -52,12 +53,12 @@ def update_task_status(task_id, status, error=None, total_emails=0, total_size=0
     conn.commit()
     conn.close()
 
-def insert_task_detail(task_id, email):
+def insert_task_detail(task_id, email, unique_code=None):
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
-    c.execute('INSERT INTO task_details (task_id, email, start_time, status) VALUES (?, ?, ?, ?)',
-              (task_id, email, start_time, 'running'))
+    c.execute('INSERT INTO task_details (task_id, email, start_time, status, unique_code) VALUES (?, ?, ?, ?, ?)',
+              (task_id, email, start_time, 'running', unique_code))
     detail_id = c.lastrowid
     conn.commit()
     conn.close()
