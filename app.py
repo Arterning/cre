@@ -139,6 +139,9 @@ def submit_emails():
         if 'email' not in email or 'cookies' not in email:
             return jsonify({"error": "Each cookie must include 'email' and 'cookie'"}), 400
     response = []    
+    for email in email_accounts:
+        email_address = email['email']
+        response.append({"email": email_address, "status": "valid"})
     for email in email_cookies:
         mails = 0
         email_address = email['email']
