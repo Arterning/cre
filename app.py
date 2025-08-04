@@ -7,6 +7,7 @@ from crawlgmail import list_gmails
 from crawlyahoo import list_yahoo_emails
 from convert import decode_base64
 from mx import get_email_provider_type
+from datetime import datetime, timezone
 import threading
 import traceback
 import sqlite3
@@ -182,6 +183,23 @@ def get_task_status(task_id):
         conn.close()
         return jsonify({"error": "Task not found"}), 404
 
+    def to_iso_format(ts_str):
+        if not ts_str:
+            return None
+        try:
+            # Handle format with microseconds
+            dt = datetime.strptime(ts_str, '%Y-%m-%d %H:%M:%S.%f')
+        except (ValueError, TypeError):
+            # Handle format without microseconds
+            try:
+                dt = datetime.strptime(ts_str, '%Y-%m-%d %H:%M:%S')
+            except (ValueError, TypeError):
+                # Return original if parsing fails (might already be in a different format or None)
+                return ts_str
+        # Assume the stored time is UTC and make it timezone-aware
+        dt_utc = dt.replace(tzinfo=timezone.utc)
+        return dt_utc.isoformat()
+
     task_data = {
         "task_id": row[0],
         "unique_code": row[1],
@@ -189,7 +207,7 @@ def get_task_status(task_id):
         "status": row[3],
         "total_emails": row[4],
         "total_size": row[5],
-        "created_at": row[6],
+        "created_at": to_iso_format(row[6]),
         "error": row[7],
         "details": []
     }
@@ -201,8 +219,8 @@ def get_task_status(task_id):
     for detail_row in details_rows:
         task_data["details"].append({
             "email": detail_row[0],
-            "start_time": detail_row[1],
-            "end_time": detail_row[2],
+            "start_time": to_iso_format(detail_row[1]),
+            "end_time": to_iso_format(detail_row[2]),
             "status": detail_row[3],
             "email_count": detail_row[4],
             "total_size": detail_row[5],
