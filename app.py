@@ -196,9 +196,9 @@ def get_task_status(task_id):
             except (ValueError, TypeError):
                 # Return original if parsing fails (might already be in a different format or None)
                 return ts_str
-        # Assume the stored time is UTC and make it timezone-aware
-        dt_utc = dt.replace(tzinfo=timezone.utc)
-        return dt_utc.isoformat()
+        # Assume the stored time is naive, localize it to server's timezone
+        dt_local = dt.astimezone()
+        return dt_local.isoformat()
 
     task_data = {
         "task_id": row[0],
