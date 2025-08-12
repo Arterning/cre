@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_file
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
-from token_crawl import fetch_all_emails
+from token_crawl import fetch_all_emails_by_token
 from cookie_crawl import fetch_all_emails_by_cookie
 from crawlgmail import list_gmails
 from crawlyahoo import list_yahoo_emails
@@ -29,7 +29,7 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
         if crawl_type == 'cookie':
             total_emails, total_size = fetch_all_emails_by_cookie(task_id, email_cookies)
         if crawl_type == 'token':
-            total_emails, total_size = fetch_all_emails(task_id, email_accounts)
+            total_emails, total_size = fetch_all_emails_by_token(task_id, email_accounts)
         if crawl_type == 'imap':
             email_downloader = IMAPEmailDownloader(task_id)
             total_emails, total_size = email_downloader.process_accounts(email_accounts)
