@@ -304,6 +304,16 @@ function renderTaskDetails(taskId, details) {
                         <div class="text-right">
                             <p class="text-sm text-gray-900">邮件: ${detail.email_count}</p>
                             <p class="text-xs text-gray-500">大小: ${(detail.total_size / 1024 / 1024).toFixed(2)} MB</p>
+                            ${detail.email_count > 0 ? `
+                                <a href="/download?email=${encodeURIComponent(detail.email)}" 
+                                   class="inline-flex items-center mt-2 px-2 py-1 border border-primary-300 shadow-sm text-xs font-medium rounded text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                   title="下载 ${detail.email} 的邮件">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    下载
+                                </a>
+                            ` : ''}
                         </div>
                     </div>
                     ${detail.error ? `<div class="mt-2 text-sm text-red-600">${detail.error}</div>` : ''}
