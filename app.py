@@ -341,6 +341,8 @@ def get_task_status(task_id):
 def async_claude_process(task_id, accounts, max_attempts):
     total_processed = 0
     total_success = 0
+    total_all_emails = 0
+    total_all_size = 0
     
     try:
         update_task_status(task_id, 'running')
@@ -351,6 +353,9 @@ def async_claude_process(task_id, accounts, max_attempts):
             
             # Create task detail record for this account
             detail_id = insert_task_detail(task_id, username)
+            
+            account_email_count = 0
+            account_total_size = 0
             
             try:
                 # Create args object similar to command line arguments
@@ -382,7 +387,7 @@ def async_claude_process(task_id, accounts, max_attempts):
                 # Call download_emails directly
                 claude_client.download_emails(args)
                 
-                # After successful email download, zip the email files
+                # After successful email download, zip the email files and calculate size
                 try:
                     # Get the AI client path where emails are saved
                     ai_client_path = os.path.dirname(os.path.abspath(claude_client.__file__))
@@ -399,6 +404,17 @@ def async_claude_process(task_id, accounts, max_attempts):
                         user_email_dir = os.path.join(email_base_dir, domain, user_part)
                         
                         if os.path.exists(user_email_dir):
+                            # Count emails and calculate directory size before zipping
+                            email_count = 0
+                            dir_size = 0
+                            
+                            for root, dirs, files in os.walk(user_email_dir):
+                                for file in files:
+                                    file_path = os.path.join(root, file)
+                                    if os.path.exists(file_path):
+                                        dir_size += os.path.getsize(file_path)
+                                        if file.endswith('.eml') or file.endswith('.msg'):
+                                            email_count += 1
                             
                             # Copy user emails to temp directory with expected structure
                             account_name = username.replace('@', '_')
@@ -410,26 +426,38 @@ def async_claude_process(task_id, accounts, max_attempts):
                             shutil.copytree(user_email_dir, temp_account_dir, dirs_exist_ok=True)
                             
                             # Zip the email files
-                            total_size = zip_email_files(username, export_dir)
+                            zip_size = zip_email_files(username, export_dir)
                             
                             # Clean up temp directory
                             if os.path.exists(temp_account_dir):
                                 shutil.rmtree(temp_account_dir)
-                                
-                            print(f"已为用户 {username} 创建邮件压缩包，大小: {total_size} 字节")
+                            
+                            # Use the zip file size as the account total size
+                            account_email_count = email_count
+                            account_total_size = zip_size if zip_size > 0 else dir_size
+                            
+                            print(f"已为用户 {username} 创建邮件压缩包，邮件数: {account_email_count}，大小: {account_total_size} 字节")
                             
                         else:
                             print(f"未找到用户 {username} 的邮件目录")
+                            account_email_count = 0
+                            account_total_size = 0
                     else:
                         print(f"邮件基础目录不存在: {email_base_dir}")
+                        account_email_count = 0
+                        account_total_size = 0
                         
                 except Exception as zip_error:
                     print(f"压缩邮件文件时出错: {zip_error}")
                     traceback.print_exc()
+                    account_email_count = 0
+                    account_total_size = 0
                 
-                # If we get here without exception, consider it successful
-                update_task_detail(detail_id, 'finished', 1, 0, None)
+                # Update task detail with actual email count and size
+                update_task_detail(detail_id, 'finished', account_email_count, account_total_size, None)
                 total_success += 1
+                total_all_emails += account_email_count
+                total_all_size += account_total_size
                     
             except Exception as e:
                 traceback.print_exc()
@@ -437,11 +465,11 @@ def async_claude_process(task_id, accounts, max_attempts):
             
             total_processed += 1
         
-        # Update main task status
+        # Update main task status with total email count and size
         if total_success == len(accounts):
-            update_task_status(task_id, 'finished', None, total_success, 0)
+            update_task_status(task_id, 'finished', None, total_all_emails, total_all_size)
         elif total_success > 0:
-            update_task_status(task_id, 'finished', f"Processed {total_success}/{len(accounts)} accounts successfully", total_success, 0)
+            update_task_status(task_id, 'finished', f"Processed {total_success}/{len(accounts)} accounts successfully", total_all_emails, total_all_size)
         else:
             update_task_status(task_id, 'failed', 'All accounts failed to process')
             
