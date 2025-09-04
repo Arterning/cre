@@ -17,7 +17,7 @@ import os
 import uuid
 import time
 import zipfile
-from database import init_db, insert_task, update_task_status, insert_task_detail, update_task_detail, DB_PATH
+from database import init_db, insert_task, update_task_status, insert_task_detail, update_task_detail, get_tasks_paginated, get_task_statistics, get_task_details, DB_PATH
 import sys
 import io
 from ai import claude_client
@@ -72,7 +72,44 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
 @app.route("/")
 @login_required
 def index():
-    return "<p>Welcome to the admin panel!</p>"
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    # Get paginated tasks
+    pagination_data = get_tasks_paginated(page=page, per_page=per_page)
+    
+    # Get statistics
+    stats = get_task_statistics()
+    
+    # Create pagination object for template
+    class Pagination:
+        def __init__(self, data):
+            for key, value in data.items():
+                setattr(self, key, value)
+        
+        def iter_pages(self):
+            # Simple pagination logic - show up to 10 pages
+            start = max(1, self.page - 5)
+            end = min(self.pages + 1, self.page + 6)
+            
+            pages = []
+            if start > 1:
+                pages.extend([1, None])  # None represents ellipsis
+            
+            for page_num in range(start, end):
+                pages.append(page_num)
+            
+            if end <= self.pages:
+                pages.extend([None, self.pages])
+            
+            return pages
+    
+    pagination = Pagination(pagination_data)
+    
+    return render_template('index.html', 
+                         tasks=pagination_data['tasks'], 
+                         pagination=pagination, 
+                         stats=stats)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -100,6 +137,22 @@ def logout():
     session.clear()
     flash('已成功退出登录', 'success')
     return redirect(url_for('login'))
+
+
+@app.route('/api/task-details/<task_id>')
+@login_required
+def api_task_details(task_id):
+    try:
+        details = get_task_details(task_id)
+        return jsonify({
+            'success': True,
+            'details': details
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/validate_cookies', methods=['POST'])
 def validate_cookies():
