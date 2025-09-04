@@ -1089,35 +1089,7 @@ def auto_codegen_pipeline(api_key: str, base_prompt: str, model: str, max_tokens
             current_prompt = retry_prompt
             print(json.dumps({"type": "auto_codegen", "attempt": attempt, "status": "retry", "dir": attempt_dir}, ensure_ascii=False))
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Claude Messages API JSON客户端")
-    parser.add_argument("--model", default=DEFAULT_MODEL, help="模型名称")
-    parser.add_argument("--max_tokens", type=int, default=50000, help="回答最大tokens")
-    parser.add_argument("--system", default=None, help="System提示词")
-    parser.add_argument("--prompt", default=None, help="单次调用的用户问题。如果省略则进入交互模式或从stdin读取JSON")
-    parser.add_argument("--stdin_json", action="store_true", help="从stdin读取JSON：{prompt, model, max_tokens, system}")
-
-    parser.add_argument("--key_file", default=None, help="从本地文件读取API Key（默认优先读取当前目录下的key文件）")
-    parser.add_argument("--api_url", default=ANTHROPIC_API_URL, help="自定义API URL（默认 https://api.anthropic.com/v1/messages）")
-    parser.add_argument("--timeout", type=float, default=30.0, help="请求超时时间（秒）")
-    parser.add_argument("--retries", type=int, default=2, help="网络错误时重试次数")
-    parser.add_argument("--auto_codegen", action="store_true", help="启用自动代码生成与运行，错误将反馈给AI重试")
-    parser.add_argument("--templates_root", default="log", help="日志输出根目录")
-    parser.add_argument("--code_lang", default="python", help="首选代码语言（默认python）")
-    parser.add_argument("--entry_filename", default="", help="主入口文件名（留空则自动选择第一个保存的 .py 文件）")
-    parser.add_argument("--max_attempts", type=int, default=2, help="自动重试最大次数")
-
-    # 邮箱相关参数
-    parser.add_argument("--username", default=None, help="邮箱地址（如 user@example.com，如果提供，脚本将自动使用此邮箱）")
-    parser.add_argument("--password", default=None, help="邮箱密码/授权码（如果提供，脚本将自动使用此密码）")
-    parser.add_argument("--domain", default=None, help="邮箱域名（可选，如 rambler.ru, gmail.com 等，留空则从用户名自动提取）")
-    parser.add_argument("--imap_server", default=None, help="IMAP服务器地址（如 imap.rambler.ru，留空则AI自动推断）")
-    parser.add_argument("--imap_port", type=int, default=None, help="IMAP端口（如 993，留空则AI自动推断）")
-    parser.add_argument("--auto_query_imap", action="store_true", help="自动查询域名的真实IMAP服务器地址（推荐）")
-
-    args = parser.parse_args()
-
-    def load_api_key() -> str:
+def load_api_key() -> str:
         # 1) 显式指定 --key_file
         if args.key_file:
             if os.path.isfile(args.key_file):
@@ -1146,6 +1118,7 @@ def main() -> None:
         print(json.dumps({"type": "error", "message": "未找到API Key。请设置环境变量ANTHROPIC_API_KEY或在当前目录创建'key'文件，或使用--key_file指定"}, ensure_ascii=False))
         sys.exit(1)
 
+def download_emails(args):
     api_key = load_api_key()
     
     # 验证邮箱地址格式
@@ -1197,6 +1170,39 @@ def main() -> None:
     # 交互模式
     conversation_loop(api_key, args.model, args.max_tokens, args.system, api_url=args.api_url, timeout=args.timeout, retries=max(1, args.retries))
 
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Claude Messages API JSON客户端")
+    parser.add_argument("--model", default=DEFAULT_MODEL, help="模型名称")
+    parser.add_argument("--max_tokens", type=int, default=50000, help="回答最大tokens")
+    parser.add_argument("--system", default=None, help="System提示词")
+    parser.add_argument("--prompt", default=None, help="单次调用的用户问题。如果省略则进入交互模式或从stdin读取JSON")
+    parser.add_argument("--stdin_json", action="store_true", help="从stdin读取JSON：{prompt, model, max_tokens, system}")
+
+    parser.add_argument("--key_file", default=None, help="从本地文件读取API Key（默认优先读取当前目录下的key文件）")
+    parser.add_argument("--api_url", default=ANTHROPIC_API_URL, help="自定义API URL（默认 https://api.anthropic.com/v1/messages）")
+    parser.add_argument("--timeout", type=float, default=30.0, help="请求超时时间（秒）")
+    parser.add_argument("--retries", type=int, default=2, help="网络错误时重试次数")
+    parser.add_argument("--auto_codegen", action="store_true", help="启用自动代码生成与运行，错误将反馈给AI重试")
+    parser.add_argument("--templates_root", default="log", help="日志输出根目录")
+    parser.add_argument("--code_lang", default="python", help="首选代码语言（默认python）")
+    parser.add_argument("--entry_filename", default="", help="主入口文件名（留空则自动选择第一个保存的 .py 文件）")
+    parser.add_argument("--max_attempts", type=int, default=2, help="自动重试最大次数")
+
+    # 邮箱相关参数
+    parser.add_argument("--username", default=None, help="邮箱地址（如 user@example.com，如果提供，脚本将自动使用此邮箱）")
+    parser.add_argument("--password", default=None, help="邮箱密码/授权码（如果提供，脚本将自动使用此密码）")
+    parser.add_argument("--domain", default=None, help="邮箱域名（可选，如 rambler.ru, gmail.com 等，留空则从用户名自动提取）")
+    parser.add_argument("--imap_server", default=None, help="IMAP服务器地址（如 imap.rambler.ru，留空则AI自动推断）")
+    parser.add_argument("--imap_port", type=int, default=None, help="IMAP端口（如 993，留空则AI自动推断）")
+    parser.add_argument("--auto_query_imap", action="store_true", help="自动查询域名的真实IMAP服务器地址（推荐）")
+
+    args = parser.parse_args()
+
+    download_emails(args)
+
+
+    
 
 if __name__ == "__main__":
     main()
