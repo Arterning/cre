@@ -556,19 +556,19 @@ def download_file():
     anchormailbox = request.args.get('anchormailbox')
 
     # Check if email domain is supported
-    supported_domains = {
-        'outlook.com', 'gmail.com', 'tutamail.com', 
-        'murena.io', 'proton.me', 'yahoo.com',
-        'ymail.com', 'rocketmail.com', 'yahoo.com.cn', 'yahoo.cn',
-    }
+    # supported_domains = {
+    #     'outlook.com', 'gmail.com', 'tutamail.com', 
+    #     'murena.io', 'proton.me', 'yahoo.com',
+    #     'ymail.com', 'rocketmail.com', 'yahoo.com.cn', 'yahoo.cn',
+    # }
 
-    if email:
-        email_domain = email.split('@')[-1].lower() if '@' in email else ''
+    # if email:
+    #     email_domain = email.split('@')[-1].lower() if '@' in email else ''
 
-        if email_domain not in supported_domains:
-            provider = get_email_provider_type(email)  # 调用函数获取邮箱类型
-            if "未知" in provider:
-                return {"error": "不支持的邮箱类型"}, 400
+    #     if email_domain not in supported_domains:
+    #         provider = get_email_provider_type(email)  # 调用函数获取邮箱类型
+    #         if "未知" in provider:
+    #             return {"error": "不支持的邮箱类型"}, 400
 
 
     if not email and not anchormailbox:
