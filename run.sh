@@ -1,1 +1,1 @@
-flask run --host 0.0.0.0
+uv run gunicorn --bind 0.0.0.0:5000 --workers 1 --reload app:app

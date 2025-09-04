@@ -1,3 +1,8 @@
-# Email Crawler
+ # 基础启动
+  gunicorn app:app
 
-一个支持多种邮箱协议的邮件下载工具，支持代理和用户代理设置。
+  # 生产环境启动
+  gunicorn --bind 0.0.0.0:8000 --workers 4 --worker-class sync --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100 app:app
+
+  # 开发环境启动（带重载）
+  gunicorn --bind 0.0.0.0:8000 --workers 1 --reload app:app
