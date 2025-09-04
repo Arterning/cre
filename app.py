@@ -20,10 +20,6 @@ import zipfile
 from database import init_db, insert_task, update_task_status, insert_task_detail, update_task_detail, DB_PATH
 import sys
 import io
-from contextlib import redirect_stdout, redirect_stderr
-
-# Import claude_client module
-sys.path.append(os.path.join(os.path.dirname(__file__), 'ai'))
 from ai import claude_client
 
 
@@ -240,72 +236,8 @@ def get_task_status(task_id):
     return jsonify(task_data)
 
 
-def call_claude_client_directly(username, password, max_attempts):
-    """Direct call to claude_client functionality without subprocess"""
-    import json
-    
-    # Capture stdout and stderr
-    stdout_capture = io.StringIO()
-    stderr_capture = io.StringIO()
-    
-    # Prepare arguments similar to command line
-    original_argv = sys.argv.copy()
-    
-    try:
-        # Mock command line arguments
-        sys.argv = [
-            'claude_client.py',
-            '--username', username,
-            '--password', password,
-            '--max_attempts', str(max_attempts),
-            '--auto_query_imap',
-            '--key_file', 'ai/key.txt',
-            '--auto_codegen'
-        ]
-        
-        # Redirect stdout and stderr to capture output
-        with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
-            try:
-                # Call main function directly
-                claude_client.main()
-                return_code = 0
-            except SystemExit as e:
-                return_code = e.code if e.code is not None else 0
-            except Exception as e:
-                print(f"Error in claude_client: {e}", file=stderr_capture)
-                return_code = 1
-        
-        # Get captured output
-        stdout_output = stdout_capture.getvalue()
-        stderr_output = stderr_capture.getvalue()
-        
-        # Parse JSON responses from stdout
-        json_responses = []
-        if stdout_output:
-            for line in stdout_output.strip().split('\n'):
-                if line.strip():
-                    try:
-                        json_obj = json.loads(line)
-                        json_responses.append(json_obj)
-                    except:
-                        pass
-        
-        return {
-            "returncode": return_code,
-            "stdout": stdout_output,
-            "stderr": stderr_output,
-            "json_responses": json_responses
-        }
-        
-    finally:
-        # Restore original argv
-        sys.argv = original_argv
-        stdout_capture.close()
-        stderr_capture.close()
-
 
 def async_claude_process(task_id, accounts, max_attempts):
-    import json
     total_processed = 0
     total_success = 0
     
@@ -320,18 +252,38 @@ def async_claude_process(task_id, accounts, max_attempts):
             detail_id = insert_task_detail(task_id, username)
             
             try:
-                # Call claude_client directly instead of subprocess
-                result = call_claude_client_directly(username, password, max_attempts)
+                # Create args object similar to command line arguments
+                class Args:
+                    def __init__(self):
+                        self.username = username
+                        self.password = password
+                        self.max_attempts = max_attempts
+                        self.auto_query_imap = True
+                        self.key_file = 'ai/key.txt'
+                        self.auto_codegen = True
+                        self.model = claude_client.DEFAULT_MODEL
+                        self.max_tokens = 50000
+                        self.system = None
+                        self.prompt = None
+                        self.stdin_json = False
+                        self.api_url = claude_client.ANTHROPIC_API_URL
+                        self.timeout = 30.0
+                        self.retries = 2
+                        self.templates_root = "log"
+                        self.code_lang = "python"
+                        self.entry_filename = ""
+                        self.domain = None
+                        self.imap_server = None
+                        self.imap_port = None
                 
-                json_responses = result.get('json_responses', [])
+                args = Args()
                 
-                # Update task detail with results
-                if result['returncode'] == 0:
-                    update_task_detail(detail_id, 'finished', len(json_responses), 0, None)
-                    total_success += 1
-                else:
-                    error_msg = f"Claude client failed with return code {result['returncode']}. stderr: {result.get('stderr', '')}"
-                    update_task_detail(detail_id, 'failed', 0, 0, error_msg)
+                # Call download_emails directly
+                claude_client.download_emails(args)
+                
+                # If we get here without exception, consider it successful
+                update_task_detail(detail_id, 'finished', 1, 0, None)
+                total_success += 1
                     
             except Exception as e:
                 traceback.print_exc()
