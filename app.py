@@ -350,8 +350,8 @@ def async_claude_process(task_id, accounts, max_attempts):
         update_task_status(task_id, 'failed', str(e))
 
 
-@app.route('/claude_email', methods=['POST'])
-def claude_email():
+@app.route('/imap_email', methods=['POST'])
+def imap_email():
     data = request.get_json()
     
     if not data:
@@ -369,7 +369,7 @@ def claude_email():
             return jsonify({"error": "Each account must include 'username' and 'password'"}), 400
     
     # Create task record and get task ID
-    task_id = insert_task('claude_email')
+    task_id = insert_task('imap_email')
     
     # Start background thread to process task
     thread = threading.Thread(target=async_claude_process, args=(
