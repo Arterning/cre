@@ -8,16 +8,28 @@
     <nav class="bg-white shadow-sm border-b border-blue-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                            </svg>
+                <div class="flex items-center space-x-8">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center">
+                                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h1 class="text-xl font-semibold text-gray-800">任务管理</h1>
                         </div>
                     </div>
-                    <div class="ml-4">
-                        <h1 class="text-xl font-semibold text-gray-800">任务管理</h1>
+                    
+                    <!-- Navigation Links -->
+                    <div class="flex space-x-4">
+                        <a href="{{ url_for('index') }}" class="text-primary-600 bg-primary-50 px-3 py-2 rounded-md text-sm font-medium">
+                            任务列表
+                        </a>
+                        <a href="{{ url_for('create_task') }}" class="text-gray-600 hover:text-primary-600 px-3 py-2 text-sm font-medium transition duration-200">
+                            新建任务
+                        </a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">

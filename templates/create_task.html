@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}新建任务 - 系统管理{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <!-- Header -->
+    <nav class="bg-white shadow-sm border-b border-blue-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-8">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center">
+                                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h1 class="text-xl font-semibold text-gray-800">新建任务</h1>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation Links -->
+                    <div class="flex space-x-4">
+                        <a href="{{ url_for('index') }}" class="text-gray-600 hover:text-primary-600 px-3 py-2 text-sm font-medium transition duration-200">
+                            任务列表
+                        </a>
+                        <a href="{{ url_for('create_task') }}" class="text-primary-600 bg-primary-50 px-3 py-2 rounded-md text-sm font-medium">
+                            新建任务
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">欢迎, {{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">退出</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-md {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form -->
+        <div class="bg-white rounded-lg shadow-sm border border-blue-100">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">IMAP 邮件任务配置</h2>
+                <p class="text-sm text-gray-600 mt-1">配置邮件账户信息和任务参数</p>
+            </div>
+            
+            <form id="taskForm" class="p-6 space-y-6">
+                <!-- Accounts Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <label class="block text-sm font-medium text-gray-700">
+                            邮件账户
+                        </label>
+                        <button type="button" onclick="addAccount()" 
+                                class="inline-flex items-center px-3 py-2 border border-primary-300 shadow-sm text-sm leading-4 font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            添加账户
+                        </button>
+                    </div>
+                    
+                    <div id="accounts-container" class="space-y-4">
+                        <!-- Initial account form -->
+                        <div class="account-item bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-medium text-gray-700">账户 1</h4>
+                                <button type="button" onclick="removeAccount(this)" 
+                                        class="text-red-600 hover:text-red-700 text-sm font-medium hidden">
+                                    删除
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">邮箱地址</label>
+                                    <input type="email" name="username" required
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                           placeholder="例如: user@example.com">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">密码</label>
+                                    <input type="password" name="password" required
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                           placeholder="邮箱密码">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task Settings -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="max_attempts" class="block text-sm font-medium text-gray-700 mb-2">
+                            最大重试次数
+                        </label>
+                        <input type="number" id="max_attempts" name="max_attempts" min="1" max="10" value="2"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <p class="text-xs text-gray-500 mt-1">连接失败时的重试次数（1-10次）</p>
+                    </div>
+                    
+                    <div>
+                        <label for="proxy" class="block text-sm font-medium text-gray-700 mb-2">
+                            代理服务器（可选）
+                        </label>
+                        <input type="text" id="proxy" name="proxy"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                               placeholder="例如: http://proxy.example.com:8080">
+                        <p class="text-xs text-gray-500 mt-1">格式: http://host:port 或 https://host:port</p>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+                    <a href="{{ url_for('index') }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        取消
+                    </a>
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                        创建任务
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+        <div class="flex items-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">创建任务中...</h3>
+                <p class="text-sm text-gray-500">请稍等，正在提交任务</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let accountCount = 1;
+
+function addAccount() {
+    accountCount++;
+    const container = document.getElementById('accounts-container');
+    const accountDiv = document.createElement('div');
+    accountDiv.className = 'account-item bg-gray-50 rounded-lg p-4';
+    accountDiv.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-medium text-gray-700">账户 ${accountCount}</h4>
+            <button type="button" onclick="removeAccount(this)" 
+                    class="text-red-600 hover:text-red-700 text-sm font-medium">
+                删除
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">邮箱地址</label>
+                <input type="email" name="username" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                       placeholder="例如: user@example.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">密码</label>
+                <input type="password" name="password" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                       placeholder="邮箱密码">
+            </div>
+        </div>
+    `;
+    container.appendChild(accountDiv);
+    
+    // Show delete button for all accounts if more than one
+    if (accountCount > 1) {
+        document.querySelectorAll('.account-item button[onclick*="removeAccount"]').forEach(btn => {
+            btn.classList.remove('hidden');
+        });
+    }
+}
+
+function removeAccount(button) {
+    const accountItem = button.closest('.account-item');
+    accountItem.remove();
+    
+    // Update account numbers
+    const accounts = document.querySelectorAll('.account-item');
+    accounts.forEach((account, index) => {
+        const title = account.querySelector('h4');
+        title.textContent = `账户 ${index + 1}`;
+    });
+    
+    accountCount = accounts.length;
+    
+    // Hide delete button if only one account remains
+    if (accountCount <= 1) {
+        document.querySelectorAll('.account-item button[onclick*="removeAccount"]').forEach(btn => {
+            btn.classList.add('hidden');
+        });
+    }
+}
+
+document.getElementById('taskForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Show loading modal
+    document.getElementById('loadingModal').classList.remove('hidden');
+    document.getElementById('loadingModal').classList.add('flex');
+    
+    // Collect form data
+    const formData = new FormData(this);
+    const accounts = [];
+    
+    // Get all username/password pairs
+    const usernames = formData.getAll('username');
+    const passwords = formData.getAll('password');
+    
+    for (let i = 0; i < usernames.length; i++) {
+        if (usernames[i] && passwords[i]) {
+            accounts.push({
+                username: usernames[i],
+                password: passwords[i]
+            });
+        }
+    }
+    
+    if (accounts.length === 0) {
+        alert('请至少添加一个有效的邮箱账户');
+        document.getElementById('loadingModal').classList.add('hidden');
+        document.getElementById('loadingModal').classList.remove('flex');
+        return;
+    }
+    
+    const payload = {
+        accounts: accounts,
+        max_attempts: parseInt(formData.get('max_attempts')) || 2
+    };
+    
+    // Add proxy if provided
+    const proxy = formData.get('proxy');
+    if (proxy && proxy.trim()) {
+        payload.proxy = proxy.trim();
+    }
+    
+    try {
+        const response = await fetch('/imap_email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            // Success - redirect to task list with success message
+            sessionStorage.setItem('taskSuccess', `任务创建成功！任务ID: ${result.task_id}`);
+            window.location.href = '{{ url_for("index") }}';
+        } else {
+            // Error
+            alert('创建任务失败: ' + (result.error || '未知错误'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('网络错误，请稍后重试');
+    } finally {
+        // Hide loading modal
+        document.getElementById('loadingModal').classList.add('hidden');
+        document.getElementById('loadingModal').classList.remove('flex');
+    }
+});
+
+// Show success message from sessionStorage
+window.addEventListener('load', function() {
+    const successMessage = sessionStorage.getItem('taskSuccess');
+    if (successMessage) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'mb-4 p-4 rounded-md bg-green-50 text-green-700 border border-green-200';
+        alertDiv.textContent = successMessage;
+        
+        const mainContent = document.querySelector('.max-w-4xl');
+        mainContent.insertBefore(alertDiv, mainContent.firstChild);
+        
+        sessionStorage.removeItem('taskSuccess');
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

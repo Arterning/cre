@@ -139,6 +139,12 @@ def logout():
     return redirect(url_for('login'))
 
 
+@app.route('/create_task')
+@login_required
+def create_task():
+    return render_template('create_task.html')
+
+
 @app.route('/api/task-details/<task_id>')
 @login_required
 def api_task_details(task_id):
@@ -445,6 +451,7 @@ def async_claude_process(task_id, accounts, max_attempts):
 
 
 @app.route('/imap_email', methods=['POST'])
+@login_required
 def imap_email():
     data = request.get_json()
     
