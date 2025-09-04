@@ -10,6 +10,7 @@ dependencies = [
     "gunicorn>=23.0.0",
     "imapclient>=3.0.1",
     "pycryptodome>=3.23.0",
+    "python-dotenv>=1.1.1",
     "python-gnupg>=0.5.4",
     "requests>=2.32.4",
     "selenium>=4.34.2",

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session, flash
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
 from token_crawl import fetch_all_emails_by_token
@@ -22,9 +22,22 @@ import sys
 import io
 from ai import claude_client
 from utils import zip_email_files
+from dotenv import load_dotenv
+from functools import wraps
 
+load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logged_in' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list=None, user_agent_list=None):
@@ -57,8 +70,36 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
 
 
 @app.route("/")
-def hello_world():
-    return "<p>running!</p>"
+@login_required
+def index():
+    return "<p>Welcome to the admin panel!</p>"
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        admin_user = os.environ.get('ADMIN_USER')
+        admin_auth = os.environ.get('ADMIN_AUTH')
+        
+        if username == admin_user and password == admin_auth:
+            session['logged_in'] = True
+            session['username'] = username
+            flash('登录成功!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('用户名或密码错误', 'error')
+    
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('已成功退出登录', 'success')
+    return redirect(url_for('login'))
 
 @app.route('/validate_cookies', methods=['POST'])
 def validate_cookies():
