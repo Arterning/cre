@@ -1089,7 +1089,7 @@ def auto_codegen_pipeline(api_key: str, base_prompt: str, model: str, max_tokens
             current_prompt = retry_prompt
             print(json.dumps({"type": "auto_codegen", "attempt": attempt, "status": "retry", "dir": attempt_dir}, ensure_ascii=False))
 
-def load_api_key() -> str:
+def load_api_key(args) -> str:
         # 1) 显式指定 --key_file
         if args.key_file:
             if os.path.isfile(args.key_file):
@@ -1119,7 +1119,7 @@ def load_api_key() -> str:
         sys.exit(1)
 
 def download_emails(args):
-    api_key = load_api_key()
+    api_key = load_api_key(args)
     
     # 验证邮箱地址格式
     if args.username and not validate_email_address(args.username):
