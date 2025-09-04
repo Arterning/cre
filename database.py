@@ -128,7 +128,7 @@ def get_task_statistics():
     c.execute('SELECT COUNT(*) FROM tasks')
     total_tasks = c.fetchone()[0]
     
-    c.execute('SELECT COUNT(*) FROM tasks WHERE status = ?', ('completed',))
+    c.execute('SELECT COUNT(*) FROM tasks WHERE status = ?', ('finished',))
     completed_tasks = c.fetchone()[0]
     
     c.execute('SELECT COUNT(*) FROM tasks WHERE status = ?', ('running',))

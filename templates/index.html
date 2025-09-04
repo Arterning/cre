@@ -122,7 +122,7 @@
                         <div class="flex-1">
                             <div class="flex items-center space-x-4">
                                 <div class="flex-shrink-0">
-                                    {% if task.status == 'completed' %}
+                                    {% if task.status == 'finished' %}
                                         <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                                             <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -283,7 +283,7 @@ function renderTaskDetails(taskId, details) {
         html += '<div class="text-center py-4 text-gray-500">暂无详细信息</div>';
     } else {
         details.forEach(detail => {
-            const statusColor = detail.status === 'completed' ? 'green' : 
+            const statusColor = detail.status === 'finished' ? 'green' : 
                               detail.status === 'running' ? 'yellow' : 
                               detail.status === 'failed' ? 'red' : 'gray';
             
