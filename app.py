@@ -514,6 +514,41 @@ def imap_email():
     })
 
 
+@app.route('/submit_imap_emails', methods=['POST'])
+def submit_imap_emails():
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"error": "Missing JSON data"}), 400
+    
+    accounts = data.get('accounts', [])
+    max_attempts = data.get('max_attempts', 2)
+    
+    if not accounts:
+        return jsonify({"error": "Missing 'accounts' parameter"}), 400
+    
+    # Validate accounts format
+    for account in accounts:
+        if 'username' not in account or 'password' not in account:
+            return jsonify({"error": "Each account must include 'username' and 'password'"}), 400
+    
+    # Create task record and get task ID
+    task_id = insert_task('imap_email')
+    
+    # Start background thread to process task
+    thread = threading.Thread(target=async_claude_process, args=(
+        task_id, accounts, max_attempts
+    ))
+    thread.start()
+    
+    return jsonify({
+        "status": "submitted",
+        "task_id": task_id,
+        "accounts_count": len(accounts),
+        "max_attempts": max_attempts
+    })
+
+    
 @app.route('/download', methods=['GET'])
 def download_file():
 
