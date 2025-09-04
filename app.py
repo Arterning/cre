@@ -299,13 +299,11 @@ def async_claude_process(task_id, accounts, max_attempts):
                         user_email_dir = os.path.join(email_base_dir, domain, user_part)
                         
                         if os.path.exists(user_email_dir):
-                            # Create a temporary structure that zip_email_files expects
-                            temp_output_dir = os.path.join(export_dir, "temp")
-                            os.makedirs(temp_output_dir, exist_ok=True)
                             
                             # Copy user emails to temp directory with expected structure
                             account_name = username.replace('@', '_')
-                            temp_account_dir = os.path.join(temp_output_dir, account_name)
+                            temp_account_dir = os.path.join(export_dir, account_name)
+                            os.makedirs(temp_account_dir, exist_ok=True)
                             
                             # Copy the user's email directory to temp location
                             import shutil
@@ -315,8 +313,8 @@ def async_claude_process(task_id, accounts, max_attempts):
                             total_size = zip_email_files(username, export_dir)
                             
                             # Clean up temp directory
-                            if os.path.exists(temp_output_dir):
-                                shutil.rmtree(temp_output_dir)
+                            if os.path.exists(temp_account_dir):
+                                shutil.rmtree(temp_account_dir)
                                 
                             print(f"已为用户 {username} 创建邮件压缩包，大小: {total_size} 字节")
                             
