@@ -1,0 +1,6 @@
+{
+  "prompt": "你现在是专业的代码开发人员，帮我实现一个可以自动以imap协议登录rambler.ru邮箱的python脚本，并可以实现自动获取全部邮件，并保存到本地。注意：当前邮箱需要使用用户名和授权码才能登录（不是普通密码）。脚本需要：1）提示用户输入用户名和授权码；2）使用IMAP协议连接rambler.ru；3）获取所有邮件并保存到本地；4）显示执行进度和结果。只要python脚本的代码，其他什么回答都不需要",
+  "model": "claude-sonnet-4-20250514",
+  "max_tokens": 50000,
+  "system": "You are a helpful coding assistant. Generate complete, runnable Python scripts with proper error handling and user input prompts."
+}

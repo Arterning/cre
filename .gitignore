@@ -3,3 +3,7 @@ exportmail
 __pycache__
 *.pyc
 *.db
+log
+email
+key.txt
+.venv

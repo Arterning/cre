@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from flask import Flask, request, jsonify, send_file
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
@@ -211,6 +213,91 @@ def get_task_status(task_id):
         })
 
     return jsonify(task_data)
+
+
+@app.route('/claude_email', methods=['POST'])
+def claude_email():
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"error": "Missing JSON data"}), 400
+    
+    username = data.get('username')
+    password = data.get('password')
+    max_attempts = data.get('max_attempts', 2)
+    
+    if not username:
+        return jsonify({"error": "Missing 'username' parameter"}), 400
+    
+    if not password:
+        return jsonify({"error": "Missing 'password' parameter"}), 400
+    
+    try:
+        # Build command arguments
+        cmd = [
+            'python', 
+            'ai/claude_client.py',
+            '--username', username,
+            '--password', password,
+            '--max_attempts', str(max_attempts),
+            '--auto_query_imap',
+            '--key_file', 'ai/key.txt',
+            '--auto_codegen'
+        ]
+        
+        # Execute the command
+        import subprocess
+        # Set environment variables to ensure UTF-8 encoding
+        env = os.environ.copy()
+        env['PYTHONIOENCODING'] = 'utf-8'
+        env['PYTHONUNBUFFERED'] = '1'
+        
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='ignore',  # Ignore encoding errors
+            cwd=os.getcwd(),
+            env=env,  # Use modified environment
+            timeout=300  # 5 minutes timeout
+        )
+        
+        # Parse the output
+        output_lines = result.stdout.strip().split('\n') if result.stdout else []
+        stderr_output = result.stderr if result.stderr else ""
+        
+        # Try to find JSON responses in the output
+        json_responses = []
+        for line in output_lines:
+            if line.strip():
+                try:
+                    json_obj = json.loads(line)
+                    json_responses.append(json_obj)
+                except:
+                    pass
+        
+        return jsonify({
+            "status": "completed" if result.returncode == 0 else "failed",
+            "return_code": result.returncode,
+            "username": username,
+            "max_attempts": max_attempts,
+            "responses": json_responses,
+            "stdout": result.stdout,
+            "stderr": stderr_output
+        })
+        
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            "status": "timeout",
+            "error": "Command execution timed out after 5 minutes"
+        }), 408
+    
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        }), 500
 
 
 @app.route('/download', methods=['GET'])
