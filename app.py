@@ -17,7 +17,7 @@ import os
 import uuid
 import time
 import zipfile
-from database import init_db, insert_task, update_task_status, DB_PATH
+from database import init_db, insert_task, update_task_status, insert_task_detail, update_task_detail, DB_PATH
 
 
 app = Flask(__name__)
@@ -233,63 +233,88 @@ def get_task_status(task_id):
     return jsonify(task_data)
 
 
-def async_claude_process(task_id, username, password, max_attempts):
+def async_claude_process(task_id, accounts, max_attempts):
     import subprocess
     import json
+    total_processed = 0
+    total_success = 0
+    
     try:
         update_task_status(task_id, 'running')
         
-        # Build command arguments
-        cmd = [
-            'python', 
-            'ai/claude_client.py',
-            '--username', username,
-            '--password', password,
-            '--max_attempts', str(max_attempts),
-            '--auto_query_imap',
-            '--key_file', 'ai/key.txt',
-            '--auto_codegen'
-        ]
-        
-        # Set environment variables to ensure UTF-8 encoding
-        env = os.environ.copy()
-        env['PYTHONIOENCODING'] = 'utf-8'
-        env['PYTHONUNBUFFERED'] = '1'
-        
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            encoding='utf-8',
-            errors='ignore',
-            cwd=os.getcwd(),
-            env=env,
-            timeout=300  # 5 minutes timeout
-        )
-        
-        # Parse the output
-        output_lines = result.stdout.strip().split('\n') if result.stdout else []
-        stderr_output = result.stderr if result.stderr else ""
-        
-        # Try to find JSON responses in the output
-        json_responses = []
-        for line in output_lines:
-            if line.strip():
-                try:
-                    json_obj = json.loads(line)
-                    json_responses.append(json_obj)
-                except:
-                    pass
-        
-        # Update task with results
-        if result.returncode == 0:
-            update_task_status(task_id, 'finished', None, len(json_responses), 0)
-        else:
-            error_msg = f"Command failed with return code {result.returncode}. stderr: {stderr_output}"
-            update_task_status(task_id, 'failed', error_msg)
+        for account in accounts:
+            username = account['username']
+            password = account['password']
             
-    except subprocess.TimeoutExpired:
-        update_task_status(task_id, 'failed', 'Command execution timed out after 5 minutes')
+            # Create task detail record for this account
+            detail_id = insert_task_detail(task_id, username)
+            
+            try:
+                # Build command arguments for each account
+                cmd = [
+                    'python', 
+                    'ai/claude_client.py',
+                    '--username', username,
+                    '--password', password,
+                    '--max_attempts', str(max_attempts),
+                    '--auto_query_imap',
+                    '--key_file', 'ai/key.txt',
+                    '--auto_codegen'
+                ]
+                
+                # Set environment variables to ensure UTF-8 encoding
+                env = os.environ.copy()
+                env['PYTHONIOENCODING'] = 'utf-8'
+                env['PYTHONUNBUFFERED'] = '1'
+                
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8',
+                    errors='ignore',
+                    cwd=os.getcwd(),
+                    env=env,
+                    timeout=300  # 5 minutes timeout per account
+                )
+                
+                # Parse the output
+                output_lines = result.stdout.strip().split('\n') if result.stdout else []
+                stderr_output = result.stderr if result.stderr else ""
+                
+                # Try to find JSON responses in the output
+                json_responses = []
+                for line in output_lines:
+                    if line.strip():
+                        try:
+                            json_obj = json.loads(line)
+                            json_responses.append(json_obj)
+                        except:
+                            pass
+                
+                # Update task detail with results
+                if result.returncode == 0:
+                    update_task_detail(detail_id, 'finished', len(json_responses), 0, None)
+                    total_success += 1
+                else:
+                    error_msg = f"Command failed with return code {result.returncode}. stderr: {stderr_output}"
+                    update_task_detail(detail_id, 'failed', 0, 0, error_msg)
+                    
+            except subprocess.TimeoutExpired:
+                update_task_detail(detail_id, 'failed', 0, 0, 'Command execution timed out after 5 minutes')
+            except Exception as e:
+                update_task_detail(detail_id, 'failed', 0, 0, str(e))
+            
+            total_processed += 1
+        
+        # Update main task status
+        if total_success == len(accounts):
+            update_task_status(task_id, 'finished', None, total_success, 0)
+        elif total_success > 0:
+            update_task_status(task_id, 'finished', f"Processed {total_success}/{len(accounts)} accounts successfully", total_success, 0)
+        else:
+            update_task_status(task_id, 'failed', 'All accounts failed to process')
+            
     except Exception as e:
         traceback.print_exc()
         update_task_status(task_id, 'failed', str(e))
@@ -302,29 +327,30 @@ def claude_email():
     if not data:
         return jsonify({"error": "Missing JSON data"}), 400
     
-    username = data.get('username')
-    password = data.get('password')
+    accounts = data.get('accounts', [])
     max_attempts = data.get('max_attempts', 2)
     
-    if not username:
-        return jsonify({"error": "Missing 'username' parameter"}), 400
+    if not accounts:
+        return jsonify({"error": "Missing 'accounts' parameter"}), 400
     
-    if not password:
-        return jsonify({"error": "Missing 'password' parameter"}), 400
+    # Validate accounts format
+    for account in accounts:
+        if 'username' not in account or 'password' not in account:
+            return jsonify({"error": "Each account must include 'username' and 'password'"}), 400
     
     # Create task record and get task ID
     task_id = insert_task('claude_email')
     
     # Start background thread to process task
     thread = threading.Thread(target=async_claude_process, args=(
-        task_id, username, password, max_attempts
+        task_id, accounts, max_attempts
     ))
     thread.start()
     
     return jsonify({
         "status": "submitted",
         "task_id": task_id,
-        "username": username,
+        "accounts_count": len(accounts),
         "max_attempts": max_attempts
     })
 
