@@ -21,6 +21,7 @@ from database import init_db, insert_task, update_task_status, insert_task_detai
 import sys
 import io
 from ai import claude_client
+from utils import zip_email_files
 
 
 app = Flask(__name__)
@@ -280,6 +281,53 @@ def async_claude_process(task_id, accounts, max_attempts):
                 
                 # Call download_emails directly
                 claude_client.download_emails(args)
+                
+                # After successful email download, zip the email files
+                try:
+                    # Get the AI client path where emails are saved
+                    ai_client_path = os.path.dirname(os.path.abspath(claude_client.__file__))
+                    email_base_dir = os.path.join(ai_client_path, "email")
+                    
+                    # Create export directory if it doesn't exist
+                    export_dir = "/tmp/exportmail/"
+                    os.makedirs(export_dir, exist_ok=True)
+                    
+                    # Check if emails were saved for this user
+                    if os.path.exists(email_base_dir):
+                        domain = username.split('@')[1] if '@' in username else 'unknown'
+                        user_part = username.split('@')[0] if '@' in username else username
+                        user_email_dir = os.path.join(email_base_dir, domain, user_part)
+                        
+                        if os.path.exists(user_email_dir):
+                            # Create a temporary structure that zip_email_files expects
+                            temp_output_dir = os.path.join(export_dir, "temp")
+                            os.makedirs(temp_output_dir, exist_ok=True)
+                            
+                            # Copy user emails to temp directory with expected structure
+                            account_name = username.replace('@', '_')
+                            temp_account_dir = os.path.join(temp_output_dir, account_name)
+                            
+                            # Copy the user's email directory to temp location
+                            import shutil
+                            shutil.copytree(user_email_dir, temp_account_dir, dirs_exist_ok=True)
+                            
+                            # Zip the email files
+                            total_size = zip_email_files(username, export_dir)
+                            
+                            # Clean up temp directory
+                            if os.path.exists(temp_output_dir):
+                                shutil.rmtree(temp_output_dir)
+                                
+                            print(f"已为用户 {username} 创建邮件压缩包，大小: {total_size} 字节")
+                            
+                        else:
+                            print(f"未找到用户 {username} 的邮件目录")
+                    else:
+                        print(f"邮件基础目录不存在: {email_base_dir}")
+                        
+                except Exception as zip_error:
+                    print(f"压缩邮件文件时出错: {zip_error}")
+                    traceback.print_exc()
                 
                 # If we get here without exception, consider it successful
                 update_task_detail(detail_id, 'finished', 1, 0, None)
