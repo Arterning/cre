@@ -89,10 +89,10 @@ def get_messages(*, headers: typing.Dict[str, str], conversation_id: str) -> typ
 
 
 
-def download_emails(email_address: str = "demo@proton.com", page_size: int = 50):
-    BLOB = "..."
-    X_PM_UID = "..."
-    COOKIE = "..."
+def download_emails(email_address: str = "demo@proton.com", page_size: int = 50, authenticate: dict = {}):
+    BLOB = authenticate.get("blob", "...")
+    X_PM_UID = authenticate.get("x_pm_uid", "...")
+    COOKIE = authenticate.get("cookie", "...")
     
     blob = BLOB
     headers = {
