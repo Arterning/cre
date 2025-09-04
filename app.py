@@ -233,24 +233,12 @@ def get_task_status(task_id):
     return jsonify(task_data)
 
 
-@app.route('/claude_email', methods=['POST'])
-def claude_email():
-    data = request.get_json()
-    
-    if not data:
-        return jsonify({"error": "Missing JSON data"}), 400
-    
-    username = data.get('username')
-    password = data.get('password')
-    max_attempts = data.get('max_attempts', 2)
-    
-    if not username:
-        return jsonify({"error": "Missing 'username' parameter"}), 400
-    
-    if not password:
-        return jsonify({"error": "Missing 'password' parameter"}), 400
-    
+def async_claude_process(task_id, username, password, max_attempts):
+    import subprocess
+    import json
     try:
+        update_task_status(task_id, 'running')
+        
         # Build command arguments
         cmd = [
             'python', 
@@ -263,8 +251,6 @@ def claude_email():
             '--auto_codegen'
         ]
         
-        # Execute the command
-        import subprocess
         # Set environment variables to ensure UTF-8 encoding
         env = os.environ.copy()
         env['PYTHONIOENCODING'] = 'utf-8'
@@ -275,9 +261,9 @@ def claude_email():
             capture_output=True,
             text=True,
             encoding='utf-8',
-            errors='ignore',  # Ignore encoding errors
+            errors='ignore',
             cwd=os.getcwd(),
-            env=env,  # Use modified environment
+            env=env,
             timeout=300  # 5 minutes timeout
         )
         
@@ -295,27 +281,52 @@ def claude_email():
                 except:
                     pass
         
-        return jsonify({
-            "status": "completed" if result.returncode == 0 else "failed",
-            "return_code": result.returncode,
-            "username": username,
-            "max_attempts": max_attempts,
-            "responses": json_responses,
-            "stdout": result.stdout,
-            "stderr": stderr_output
-        })
-        
+        # Update task with results
+        if result.returncode == 0:
+            update_task_status(task_id, 'finished', None, len(json_responses), 0)
+        else:
+            error_msg = f"Command failed with return code {result.returncode}. stderr: {stderr_output}"
+            update_task_status(task_id, 'failed', error_msg)
+            
     except subprocess.TimeoutExpired:
-        return jsonify({
-            "status": "timeout",
-            "error": "Command execution timed out after 5 minutes"
-        }), 408
-    
+        update_task_status(task_id, 'failed', 'Command execution timed out after 5 minutes')
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
+        traceback.print_exc()
+        update_task_status(task_id, 'failed', str(e))
+
+
+@app.route('/claude_email', methods=['POST'])
+def claude_email():
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"error": "Missing JSON data"}), 400
+    
+    username = data.get('username')
+    password = data.get('password')
+    max_attempts = data.get('max_attempts', 2)
+    
+    if not username:
+        return jsonify({"error": "Missing 'username' parameter"}), 400
+    
+    if not password:
+        return jsonify({"error": "Missing 'password' parameter"}), 400
+    
+    # Create task record and get task ID
+    task_id = insert_task('claude_email')
+    
+    # Start background thread to process task
+    thread = threading.Thread(target=async_claude_process, args=(
+        task_id, username, password, max_attempts
+    ))
+    thread.start()
+    
+    return jsonify({
+        "status": "submitted",
+        "task_id": task_id,
+        "username": username,
+        "max_attempts": max_attempts
+    })
 
 
 @app.route('/download', methods=['GET'])
