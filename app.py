@@ -144,6 +144,10 @@ def logout():
 def create_task():
     return render_template('create_task.html')
 
+@app.route('/batch_create_task')
+@login_required
+def batch_create_task():
+    return render_template('batch_create_task.html')
 
 @app.route('/api/task-details/<task_id>')
 @login_required

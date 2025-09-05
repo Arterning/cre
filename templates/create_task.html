@@ -30,6 +30,9 @@
                         <a href="{{ url_for('create_task') }}" class="text-primary-600 bg-primary-50 px-3 py-2 rounded-md text-sm font-medium">
                             新建任务
                         </a>
+                        <a href="{{ url_for('batch_create_task') }}" class="text-gray-600 hover:text-primary-600 px-3 py-2 text-sm font-medium transition duration-200">
+                            批量导入
+                        </a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -127,18 +130,29 @@
                 </div>
 
                 <!-- Submit Buttons -->
-                <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
-                    <a href="{{ url_for('index') }}" 
-                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        取消
-                    </a>
-                    <button type="submit" 
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                        </svg>
-                        创建任务
-                    </button>
+                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <div class="flex items-center">
+                        <a href="{{ url_for('batch_create_task') }}" 
+                           class="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                            </svg>
+                            批量导入模式
+                        </a>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="{{ url_for('index') }}" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            取消
+                        </a>
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                            创建任务
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
