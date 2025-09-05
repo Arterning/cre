@@ -514,8 +514,8 @@ def imap_email():
     })
 
 
-@app.route('/submit_imap_emails', methods=['POST'])
-def submit_imap_emails():
+@app.route('/submit_imap_task', methods=['POST'])
+def submit_imap_task():
     data = request.get_json()
     
     if not data:
