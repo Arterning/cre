@@ -559,6 +559,8 @@ def download_file():
     email = request.args.get('email')
     anchormailbox = request.args.get('anchormailbox')
 
+    email_domain = email.split('@')[-1].lower() if '@' in email else ''
+
     # Check if email domain is supported
     # supported_domains = {
     #     'outlook.com', 'gmail.com', 'tutamail.com', 
@@ -567,7 +569,6 @@ def download_file():
     # }
 
     # if email:
-    #     email_domain = email.split('@')[-1].lower() if '@' in email else ''
 
     #     if email_domain not in supported_domains:
     #         provider = get_email_provider_type(email)  # 调用函数获取邮箱类型
