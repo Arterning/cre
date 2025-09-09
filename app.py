@@ -3,8 +3,8 @@
 from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session, flash
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
-from token_crawl import fetch_all_emails_by_token
-from cookie_crawl import fetch_all_emails_by_cookie
+from token.token_crawl import fetch_all_emails_by_token
+from cookie.cookie_crawl import fetch_all_emails_by_cookie
 from crawlgmail import list_gmails
 from crawlyahoo import list_yahoo_emails
 from convert import decode_base64
