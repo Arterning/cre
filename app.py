@@ -3,10 +3,10 @@
 from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session, flash
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
-from token.token_crawl import fetch_all_emails_by_token
-from cookie.cookie_crawl import fetch_all_emails_by_cookie
-from crawlgmail import list_gmails
-from crawlyahoo import list_yahoo_emails
+
+from cookie import cookie_crawl, token_crawl
+from cookie.crawlgmail import list_gmails
+from cookie.crawlyahoo import list_yahoo_emails
 from convert import decode_base64
 from mx import get_email_provider_type
 from datetime import datetime, timezone
@@ -46,9 +46,9 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
     try:
         update_task_status(task_id, 'running')
         if crawl_type == 'cookie':
-            total_emails, total_size = fetch_all_emails_by_cookie(task_id, email_cookies)
+            total_emails, total_size = cookie_crawl.fetch_all_emails_by_cookie(task_id, email_cookies)
         if crawl_type == 'token':
-            total_emails, total_size = fetch_all_emails_by_token(task_id, email_accounts)
+            total_emails, total_size = token_crawl.fetch_all_emails_by_token(task_id, email_accounts)
         if crawl_type == 'imap':
             email_downloader = IMAPEmailDownloader(task_id)
             total_emails, total_size = email_downloader.process_accounts(email_accounts)

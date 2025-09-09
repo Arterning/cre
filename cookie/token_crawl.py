@@ -1,6 +1,6 @@
 from database import insert_task_detail, update_task_detail
-from proton import download_emails
-from outlook import fetch_emails
+from .proton import download_emails
+from .outlook import fetch_emails
 import traceback
 
 

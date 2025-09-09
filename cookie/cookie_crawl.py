@@ -1,7 +1,7 @@
 
-from crawlgmail import fetch_gmail_emails
-from crawlyahoo import fetch_yahoo_emails
-from crawlmurena import fetch_murena_emails
+from .crawlgmail import fetch_gmail_emails
+from .crawlyahoo import fetch_yahoo_emails
+from .crawlmurena import fetch_murena_emails
 from convert import decode_base64
 from mx import get_email_provider_type
 from database import insert_task_detail, update_task_detail
