@@ -143,10 +143,13 @@ def async_claude_process(task_id, accounts, max_attempts):
             update_task_status(task_id, 'finished', f"Processed {total_success}/{len(accounts)} accounts successfully", total_all_emails, total_all_size)
         else:
             update_task_status(task_id, 'failed', 'All accounts failed to process')
+        
+        return total_all_emails, total_all_size
             
     except Exception as e:
         traceback.print_exc()
         update_task_status(task_id, 'failed', str(e))
+        return 0, 0
 
 
 def submit_imap_task():

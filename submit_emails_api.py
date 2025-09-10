@@ -7,6 +7,7 @@ from mx import get_email_provider_type
 from cookie.crawlgmail import list_gmails
 from cookie.crawlyahoo import list_yahoo_emails
 from database import insert_task
+from submit_imap_task_api import async_claude_process
 
 
 def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list=None, user_agent_list=None):
@@ -25,8 +26,7 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
         if crawl_type == 'token':
             total_emails, total_size = token_crawl.fetch_all_emails_by_token(task_id, email_accounts)
         if crawl_type == 'imap':
-            email_downloader = IMAPEmailDownloader(task_id)
-            total_emails, total_size = email_downloader.process_accounts(email_accounts)
+            total_emails, total_size = async_claude_process(task_id, email_accounts, 2)
         if crawl_type == 'default':
             total_emails, total_size = process_email_accounts(
                 task_id,
@@ -58,8 +58,8 @@ def submit_emails():
         if 'email' not in account or 'password' not in account:
             return jsonify({"error": "Each account must include 'email' and 'password'"}), 400
         
-    for email in email_cookies:
-        if 'email' not in email or 'cookies' not in email:
+    for account in email_cookies:
+        if 'email' not in account or 'cookies' not in account:
             return jsonify({"error": "Each cookie must include 'email' and 'cookie'"}), 400
 
     # 提取全局代理和用户代理设置
