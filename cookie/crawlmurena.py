@@ -127,7 +127,10 @@ def fetch_murena_emails(email, cookies, proxy, limit=5):
         encoded_data = base64.b64encode(json_data.encode('utf-8')).decode('utf-8')
         encoded_data = encoded_data.rstrip("=")
         #print(encoded_data)
-        cmd=f"curl --proxy {valid_proxy}  -o {output_file} --cookie '{cookiedata}' --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/Raw/&q[]=/0/Download/&q[]=/{encoded_data}'"
+        if valid_proxy == "":
+            cmd=f"curl -o {output_file} --cookie '{cookiedata}' --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/Raw/&q[]=/0/Download/&q[]=/{encoded_data}'"
+        else:
+            cmd=f"curl --proxy {valid_proxy}  -o {output_file} --cookie '{cookiedata}' --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/Raw/&q[]=/0/Download/&q[]=/{encoded_data}'"
         result =run_command(cmd)
         print(result["stdout"])
         time.sleep(10)
