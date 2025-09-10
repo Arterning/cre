@@ -72,7 +72,7 @@ def fetch_murena_emails(email, cookies, proxy):
                     break
                 
     else:
-        result = run_command("curl --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/AppData/'")
+        result = run_command(f"curl --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/AppData/' --cookie '{cookiedata}'")
 
 
     accountHash = re.findall(regex1, result["stdout"])
