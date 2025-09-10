@@ -125,4 +125,6 @@ def submit_emails():
             else:
                 response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
 
-    return jsonify({"status": "submitted", "task_id": task_id, "emails": response})
+        return jsonify({"status": "submitted", "task_id": task_id, "emails": response})
+
+    return jsonify({"status": "submitted", "task_id": task_id})
