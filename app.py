@@ -270,7 +270,7 @@ def submit_emails():
         elif "Yahoo Mail" in provider or "Yahoo" in provider:
             mails = list_yahoo_emails(cookies)
         elif "Murena Mail" in provider or "Murena" in provider:
-            pass
+            mails = 1
         else:
             raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
         

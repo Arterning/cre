@@ -95,7 +95,10 @@ def fetch_murena_emails(email, cookies, proxy):
     postdata = json.dumps(data)
     token = f"X-SM-Token: {token}"
     contenttype = "Content-Type: application/json"
-    cmd = f"curl -X POST --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/Json/&q[]=/0/' --cookie '{cookiedata}' --proxy {valid_proxy} -H '{token}' -H '{contenttype}' -d '{postdata}'"
+    if valid_proxy == "":
+        cmd = f"curl -X POST --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/Json/&q[]=/0/' --cookie '{cookiedata}' -H '{token}' -H '{contenttype}' -d '{postdata}'"
+    else:
+        cmd = f"curl -X POST --cookie netscape-cookies.txt 'https://murena.io/apps/snappymail/?/Json/&q[]=/0/' --cookie '{cookiedata}' --proxy {valid_proxy} -H '{token}' -H '{contenttype}' -d '{postdata}'"
     result = run_command(cmd)  # 使用管道的命令
     regex3 = r'"uid":(\d+)'
     match = re.search(regex3, result["stdout"])
