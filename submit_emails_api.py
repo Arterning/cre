@@ -91,38 +91,38 @@ def submit_emails():
         ))
     thread.start()
 
-    email_cookies = data.get('email_cookies', [])
-    for email in email_cookies:
-        if 'email' not in email or 'cookies' not in email:
-            return jsonify({"error": "Each cookie must include 'email' and 'cookie'"}), 400
-    response = []    
-    for email in email_accounts:
-        email_address = email['email']
-        response.append({"email": email_address, "status": "valid"})
-    for email in email_cookies:
-        mails = 0
-        email_address = email['email']
-        try :
-            cookies = decode_base64(email['cookies'])
-        except Exception as e:
-            print(f"Failed to decode cookies for {email_address}: {e}")
-            response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
-            continue  # 如果解码失败，跳过这个邮箱
-        
-        provider = get_email_provider_type(email_address)
-
-        if "Google Mail" in provider or "Gmail" in provider:
-            mails = list_gmails(cookies)
-        elif "Yahoo Mail" in provider or "Yahoo" in provider:
-            mails = list_yahoo_emails(cookies)
-        elif "Murena Mail" in provider or "Murena" in provider:
-            mails = 1
-        else:
-            raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
-        
-        if mails > 0:
+    if crawl_type == 'cookie':
+        for email in email_cookies:
+            if 'email' not in email or 'cookies' not in email:
+                return jsonify({"error": "Each cookie must include 'email' and 'cookie'"}), 400
+        response = []    
+        for email in email_accounts:
+            email_address = email['email']
             response.append({"email": email_address, "status": "valid"})
-        else:
-            response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
+        for email in email_cookies:
+            mails = 0
+            email_address = email['email']
+            try :
+                cookies = decode_base64(email['cookies'])
+            except Exception as e:
+                print(f"Failed to decode cookies for {email_address}: {e}")
+                response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
+                continue  # 如果解码失败，跳过这个邮箱
+            
+            provider = get_email_provider_type(email_address)
+
+            if "Google Mail" in provider or "Gmail" in provider:
+                mails = list_gmails(cookies)
+            elif "Yahoo Mail" in provider or "Yahoo" in provider:
+                mails = list_yahoo_emails(cookies)
+            elif "Murena Mail" in provider or "Murena" in provider:
+                mails = 1
+            else:
+                raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
+            
+            if mails > 0:
+                response.append({"email": email_address, "status": "valid"})
+            else:
+                response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
 
     return jsonify({"status": "submitted", "task_id": task_id, "emails": response})
