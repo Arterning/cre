@@ -309,6 +309,8 @@ def process_email_account(email, password, output_dir, proxy_list=None, user_age
                     break
 
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 print(f"处理邮件时出错: {str(e)}")
                 break
 
