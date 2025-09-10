@@ -427,6 +427,7 @@ if __name__ == "__main__":
 
     # 执行邮件下载和打包
     total_emails, total_size = process_email_accounts(
+        1,
         email_accounts,
         output_dir=args.output,
         proxy_list=args.proxy.split(',') if args.proxy else None,
