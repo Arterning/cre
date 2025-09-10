@@ -20,7 +20,7 @@ def async_claude_process(task_id, accounts, max_attempts):
         update_task_status(task_id, 'running')
         
         for account in accounts:
-            username = account['username']
+            username = account.get('username', account.get('email'))
             password = account['password']
             
             # Create task detail record for this account
