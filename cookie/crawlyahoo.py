@@ -26,7 +26,7 @@ def list_yahoo_emails(cookies):
         return 0
     return len(matches)
 
-def fetch_yahoo_emails(email, cookies, proxy):
+def fetch_yahoo_emails(email, cookies, proxy, limit=5):
     """
     使用 curl 命令获取 Yahoo 邮箱中的邮件 ID。
     需要提供 Netscape 格式的 cookies 文件。
@@ -64,6 +64,12 @@ def fetch_yahoo_emails(email, cookies, proxy):
     matches = re.findall(regex, result["stdout"])
     matches = list(set(matches))
     print("获取到{}封邮件".format(len(matches)))
+    
+    # Apply limit to the number of emails to process
+    if limit > 0:
+        matches = matches[:limit]
+        print(f"限制处理数量为 {limit} 封邮件")
+    
     account_name = email.replace('@', '_')
     output_dir = f"/tmp/exportmail/{account_name}/"
     total_emails = len(matches)

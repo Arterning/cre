@@ -13,6 +13,7 @@ def fetch_all_emails_by_cookie(task_id, email_cookies):
     for account in email_cookies:
         email = account['email']
         unique_code = account.get('unique_code')
+        limit = account.get('limit', 5)
         detail_id = insert_task_detail(task_id, email, unique_code)
         try:
             cookies_base64 = account['cookies']
@@ -24,13 +25,13 @@ def fetch_all_emails_by_cookie(task_id, email_cookies):
             
             # if gmail
             if "Google Mail" in provider or "Gmail" in provider:
-                size, emails = fetch_gmail_emails(email, cookies, proxy)
+                size, emails = fetch_gmail_emails(email, cookies, proxy, limit)
             # if yahoo
             elif "Yahoo Mail" in provider or "Yahoo" in provider:
-                size, emails = fetch_yahoo_emails(email, cookies, proxy)
+                size, emails = fetch_yahoo_emails(email, cookies, proxy, limit)
             # if murena
             elif "Murena Mail" in provider or "Murena" in provider:
-                size, emails = fetch_murena_emails(email, cookies, proxy)
+                size, emails = fetch_murena_emails(email, cookies, proxy, limit)
             else:
                 raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
 

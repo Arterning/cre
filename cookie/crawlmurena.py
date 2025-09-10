@@ -24,7 +24,7 @@ def run_command(command):
 
 
 
-def fetch_murena_emails(email, cookies, proxy):
+def fetch_murena_emails(email, cookies, proxy, limit=5):
     """
     使用 curl 命令获取 Murena 邮件。
     cookies: Netscape 格式的 cookies 字符串。
@@ -105,12 +105,18 @@ def fetch_murena_emails(email, cookies, proxy):
     uid = match.group(1)
     print("获取到{}封邮件".format(uid))
 
+    # Apply limit to the number of emails to process
+    max_emails = int(uid)
+    if limit > 0 and limit < max_emails:
+        max_emails = limit
+        print(f"限制处理数量为 {limit} 封邮件")
+
     account_name = email.replace('@', '_')
     output_dir = f"/tmp/exportmail/{account_name}/"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     print("输出目录为：", output_dir)
-    for i in range(int(uid)):
+    for i in range(max_emails):
         print("正在收取第{}封邮件".format(i+1))
         output_file = f"{output_dir}/output_{i+1}.eml"
         json_data = {"folder":"INBOX","uid":0,"mimeType":"message/rfc822","fileName":"","accountHash":""}
@@ -129,7 +135,7 @@ def fetch_murena_emails(email, cookies, proxy):
     # 创建压缩包
     zip_output_dir = f"/tmp/exportmail/"
     total_size = zip_email_files(email, zip_output_dir)
-    total_emails = len(range(int(uid)))
+    total_emails = max_emails
     print(f"已导出 {total_emails} 封邮件，压缩包大小为 {total_size} 字节。")
     return total_size, total_emails
 

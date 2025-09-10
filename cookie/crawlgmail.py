@@ -40,7 +40,7 @@ def list_gmails(cookies):
         return 0
     return len(matches)
 
-def fetch_gmail_emails(email, cookies, proxy):
+def fetch_gmail_emails(email, cookies, proxy, limit=5):
     """
     使用 curl 命令获取 Gmail 邮件。
     cookie_file: Netscape 格式的 cookies 文件路径。
@@ -76,6 +76,12 @@ def fetch_gmail_emails(email, cookies, proxy):
     
     matches = re.findall(regex, result["stdout"])
     print("获取到{}封邮件".format(len(matches)))
+    
+    # Apply limit to the number of emails to process
+    if limit > 0:
+        matches = matches[:limit]
+        print(f"限制处理数量为 {limit} 封邮件")
+    
     account_name = email.replace('@', '_')
     
     result_file = f'{account_name}_result.txt'
