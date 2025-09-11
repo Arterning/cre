@@ -282,6 +282,22 @@ function renderTaskDetails(taskId, details) {
     if (details.length === 0) {
         html += '<div class="text-center py-4 text-gray-500">暂无详细信息</div>';
     } else {
+        // Add task info header
+        html += `
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <h3 class="text-sm font-medium text-blue-900 mb-2">任务信息</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-blue-800">任务ID:</span>
+                        <span class="text-blue-700 ml-2 font-mono">${taskId}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-blue-800">唯一标识:</span>
+                        <span class="text-blue-700 ml-2 font-mono">${details[0]?.unique_code || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
         details.forEach(detail => {
             const statusColor = detail.status === 'finished' ? 'green' : 
                               detail.status === 'running' ? 'yellow' : 
