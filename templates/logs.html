@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}运行日志 - 系统管理{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <!-- Header -->
+    <nav class="bg-white shadow-sm border-b border-blue-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-8">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center">
+                                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h1 class="text-xl font-semibold text-gray-800">运行日志</h1>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Links -->
+                    <div class="flex space-x-4">
+                        <a href="{{ url_for('index') }}" class="text-gray-600 hover:text-primary-600 px-3 py-2 text-sm font-medium transition duration-200">
+                            任务列表
+                        </a>
+                        <a href="{{ url_for('create_task') }}" class="text-gray-600 hover:text-primary-600 px-3 py-2 text-sm font-medium transition duration-200">
+                            新建任务
+                        </a>
+                        <a href="{{ url_for('templates') }}" class="text-gray-600 hover:text-primary-600 px-3 py-2 text-sm font-medium transition duration-200">
+                            模板管理
+                        </a>
+                        <a href="{{ url_for('logs') }}" class="text-primary-600 bg-primary-50 px-3 py-2 rounded-md text-sm font-medium">
+                            运行日志
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">欢迎, {{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">退出</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Log Status -->
+        <div class="bg-white rounded-lg shadow-sm border border-blue-100 p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse mr-2"></div>
+                        <span class="text-sm text-gray-600">实时日志监控</span>
+                    </div>
+                    <span id="log-count" class="text-sm text-gray-500">日志条数: 0</span>
+                </div>
+                <div class="text-sm text-gray-500">
+                    自动刷新: <span id="refresh-status">每5秒</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Display -->
+        <div class="bg-white rounded-lg shadow-sm border border-blue-100">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">系统运行日志</h2>
+                <p class="text-sm text-gray-600 mt-1">显示最新1000条print输出信息</p>
+            </div>
+
+            <div class="p-6">
+                <div id="log-container" class="bg-gray-900 rounded-lg p-4 font-mono text-sm text-green-400 h-96 overflow-y-auto">
+                    <div id="log-content">
+                        <div class="text-center py-8 text-gray-500">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto mb-2"></div>
+                            正在加载日志...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Info -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">
+                        关于运行日志
+                    </h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <p>• 实时显示Flask应用的print输出</p>
+                        <p>• 自动保存最新1000条日志记录</p>
+                        <p>• 每5秒自动刷新一次</p>
+                        <p>• 日志格式：[时间戳] 日志内容</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let logRefreshInterval;
+let isAutoRefresh = true;
+
+// 格式化日志显示
+function formatLogLine(log) {
+    // 检查是否有时间戳
+    if (log.startsWith('[')) {
+        const timestampEnd = log.indexOf(']');
+        if (timestampEnd !== -1) {
+            const timestamp = log.substring(0, timestampEnd + 1);
+            const content = log.substring(timestampEnd + 1).trim();
+            return `<div class="log-line mb-1"><span class="text-gray-400">${timestamp}</span> <span class="text-green-400">${escapeHtml(content)}</span></div>`;
+        }
+    }
+    return `<div class="log-line mb-1 text-green-400">${escapeHtml(log)}</div>`;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 加载日志
+async function loadLogs() {
+    try {
+        const response = await fetch('/api/logs');
+        const data = await response.json();
+
+        if (data.success) {
+            const logContent = document.getElementById('log-content');
+            const logCount = document.getElementById('log-count');
+
+            if (data.logs && data.logs.length > 0) {
+                const formattedLogs = data.logs.map(formatLogLine).join('');
+                logContent.innerHTML = formattedLogs;
+
+                // 自动滚动到底部
+                const container = document.getElementById('log-container');
+                container.scrollTop = container.scrollHeight;
+            } else {
+                logContent.innerHTML = '<div class="text-center py-8 text-gray-500">暂无日志记录</div>';
+            }
+
+            logCount.textContent = `日志条数: ${data.count}`;
+        } else {
+            document.getElementById('log-content').innerHTML =
+                `<div class="text-center py-8 text-red-400">加载日志失败: ${data.error}</div>`;
+        }
+    } catch (error) {
+        document.getElementById('log-content').innerHTML =
+            `<div class="text-center py-8 text-red-400">网络错误: ${error.message}</div>`;
+    }
+}
+
+// 开始自动刷新
+function startAutoRefresh() {
+    if (logRefreshInterval) {
+        clearInterval(logRefreshInterval);
+    }
+
+    // 立即加载一次
+    loadLogs();
+
+    // 每5秒刷新一次
+    logRefreshInterval = setInterval(loadLogs, 5000);
+    isAutoRefresh = true;
+}
+
+// 页面加载完成后开始自动刷新
+document.addEventListener('DOMContentLoaded', function() {
+    startAutoRefresh();
+});
+
+// 页面隐藏时停止刷新，显示时恢复
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        if (logRefreshInterval) {
+            clearInterval(logRefreshInterval);
+        }
+    } else if (isAutoRefresh) {
+        startAutoRefresh();
+    }
+});
+
+// 页面卸载时清理
+window.addEventListener('beforeunload', function() {
+    if (logRefreshInterval) {
+        clearInterval(logRefreshInterval);
+    }
+});
+</script>
+
+{% endblock %}

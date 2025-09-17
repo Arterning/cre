@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import sys
+import io
+import threading
+import traceback
+import sqlite3
+import os
+import uuid
+import time
+import zipfile
+from collections import deque
+from datetime import datetime, timezone
 from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session, flash
 from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
@@ -9,17 +20,7 @@ from cookie.crawlgmail import list_gmails
 from cookie.crawlyahoo import list_yahoo_emails
 from convert import decode_base64
 from mx import get_email_provider_type
-from datetime import datetime, timezone
-import threading
-import traceback
-import sqlite3
-import os
-import uuid
-import time
-import zipfile
 from database import init_db, insert_task, update_task_status, insert_task_detail, update_task_detail, get_tasks_paginated, get_task_statistics, get_task_details, DB_PATH
-import sys
-import io
 from ai import claude_client
 from utils import zip_email_files
 from dotenv import load_dotenv
@@ -31,6 +32,34 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
+
+# 日志捕获系统
+class LogCapture:
+    def __init__(self, max_lines=1000):
+        self.max_lines = max_lines
+        self.logs = deque(maxlen=max_lines)
+        self.original_stdout = sys.stdout
+
+    def write(self, message):
+        # 写入原始输出
+        self.original_stdout.write(message)
+        self.original_stdout.flush()
+
+        # 捕获非空行
+        message = message.strip()
+        if message:
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            self.logs.append(f"[{timestamp}] {message}")
+
+    def flush(self):
+        self.original_stdout.flush()
+
+    def get_logs(self):
+        return list(self.logs)
+
+# 初始化日志捕获
+log_capture = LogCapture()
+sys.stdout = log_capture
 
 
 def login_required(f):
@@ -410,6 +439,31 @@ def api_delete_template(template_name):
         return jsonify({'success': True, 'message': '模板删除成功'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/logs', methods=['GET'])
+@login_required
+def api_get_logs():
+    """获取运行日志"""
+    try:
+        logs = log_capture.get_logs()
+        return jsonify({
+            'success': True,
+            'logs': logs,
+            'count': len(logs)
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/logs')
+@login_required
+def logs():
+    """运行日志页面"""
+    return render_template('logs.html')
 
 
 @app.route('/download', methods=['GET'])
