@@ -158,9 +158,22 @@ def batch_create_task():
 def api_task_details(task_id):
     try:
         details = get_task_details(task_id)
+
+        # Get task info including logs
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('SELECT logs FROM tasks WHERE id = ?', (task_id,))
+        result = c.fetchone()
+        conn.close()
+
+        task_info = {
+            'logs': result[0] if result and result[0] else None
+        }
+
         return jsonify({
             'success': True,
-            'details': details
+            'details': details,
+            'task_info': task_info
         })
     except Exception as e:
         return jsonify({

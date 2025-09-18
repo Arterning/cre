@@ -268,7 +268,7 @@ async function toggleTaskDetails(taskId) {
             const data = await response.json();
             
             if (data.success) {
-                renderTaskDetails(taskId, data.details);
+                renderTaskDetails(taskId, data.details, data.task_info);
             } else {
                 detailsDiv.innerHTML = `<div class="text-center py-4 text-red-600">加载失败: ${data.error}</div>`;
             }
@@ -280,30 +280,48 @@ async function toggleTaskDetails(taskId) {
     }
 }
 
-function renderTaskDetails(taskId, details) {
+function renderTaskDetails(taskId, details, taskInfo) {
     const detailsDiv = document.getElementById(`task-details-${taskId}`);
-    
+
     let html = '<div class="space-y-4">';
-    
-    if (details.length === 0) {
-        html += '<div class="text-center py-4 text-gray-500">暂无详细信息</div>';
-    } else {
-        // Add task info header
+
+    // Add task info header
+    html += `
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <h3 class="text-sm font-medium text-blue-900 mb-2">任务信息</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="font-medium text-blue-800">任务ID:</span>
+                    <span class="text-blue-700 ml-2 font-mono">${taskId}</span>
+                </div>
+                <div>
+                    <span class="font-medium text-blue-800">唯一标识:</span>
+                    <span class="text-blue-700 ml-2 font-mono">${details[0]?.unique_code || 'N/A'}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add task logs section
+    if (taskInfo && taskInfo.logs) {
         html += `
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <h3 class="text-sm font-medium text-blue-900 mb-2">任务信息</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <span class="font-medium text-blue-800">任务ID:</span>
-                        <span class="text-blue-700 ml-2 font-mono">${taskId}</span>
-                    </div>
-                    <div>
-                        <span class="font-medium text-blue-800">唯一标识:</span>
-                        <span class="text-blue-700 ml-2 font-mono">${details[0]?.unique_code || 'N/A'}</span>
-                    </div>
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-medium text-gray-900">任务日志</h3>
+                    <button onclick="toggleLogs('${taskId}')" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                        <span id="logs-toggle-${taskId}">展开</span>
+                    </button>
+                </div>
+                <div id="logs-content-${taskId}" class="hidden">
+                    <pre class="text-xs text-gray-700 bg-white border rounded p-3 max-h-64 overflow-y-auto whitespace-pre-wrap">${taskInfo.logs}</pre>
                 </div>
             </div>
         `;
+    }
+
+    if (details.length === 0) {
+        html += '<div class="text-center py-4 text-gray-500">暂无详细信息</div>';
+    } else {
         details.forEach(detail => {
             const statusColor = detail.status === 'finished' ? 'green' : 
                               detail.status === 'running' ? 'yellow' : 
@@ -346,6 +364,19 @@ function renderTaskDetails(taskId, details) {
     
     html += '</div>';
     detailsDiv.innerHTML = html;
+}
+
+function toggleLogs(taskId) {
+    const logsContent = document.getElementById(`logs-content-${taskId}`);
+    const toggleText = document.getElementById(`logs-toggle-${taskId}`);
+
+    if (logsContent.classList.contains('hidden')) {
+        logsContent.classList.remove('hidden');
+        toggleText.textContent = '收起';
+    } else {
+        logsContent.classList.add('hidden');
+        toggleText.textContent = '展开';
+    }
 }
 </script>
 {% endblock %}
