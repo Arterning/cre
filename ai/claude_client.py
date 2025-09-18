@@ -745,7 +745,7 @@ def merge_user_emails(source_dir: str, target_dir: str, domain: str, user_part: 
 
 def find_existing_template(domain: str = None) -> str:
     """查找已存在的模板文件"""
-    templates_dir = "templates"
+    templates_dir = "ai/templates"
     if not os.path.exists(templates_dir):
         return None
     
