@@ -10,29 +10,28 @@ DB_PATH = 'tasks.db'
 class TaskLogCapture:
     def __init__(self, task_id):
         self.task_id = task_id
-        self.original_stdout = None
+        self.previous_stdout = None
 
     def write(self, text):
-        # 写入到原始stdout（保持正常显示）
-        if self.original_stdout:
-            self.original_stdout.write(text)
-            self.original_stdout.flush()
+        # 1. 先传递给下一级（可能是LogCapture或原始stdout）
+        if self.previous_stdout:
+            self.previous_stdout.write(text)
 
-        # 如果是实际内容（不是空字符或只有换行），立即追加到数据库
+        # 2. 处理自己的逻辑（写入数据库）
         if text.strip():
             append_task_log(self.task_id, text.rstrip())
 
     def flush(self):
-        if self.original_stdout:
-            self.original_stdout.flush()
+        if self.previous_stdout and hasattr(self.previous_stdout, 'flush'):
+            self.previous_stdout.flush()
 
     def start_capture(self):
-        self.original_stdout = sys.stdout
+        self.previous_stdout = sys.stdout
         sys.stdout = self
 
     def stop_capture(self):
-        if self.original_stdout:
-            sys.stdout = self.original_stdout
+        if self.previous_stdout:
+            sys.stdout = self.previous_stdout
 
     def __enter__(self):
         self.start_capture()
