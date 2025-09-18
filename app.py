@@ -12,7 +12,6 @@ import zipfile
 from collections import deque
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session, flash
-from imap import IMAPEmailDownloader
 from crawl import process_email_accounts
 
 from cookie import cookie_crawl, token_crawl
@@ -26,7 +25,7 @@ from utils import zip_email_files
 from dotenv import load_dotenv
 from functools import wraps
 from submit_emails_api import submit_emails
-from submit_imap_task_api import submit_imap_task, imap_email
+from submit_emails_api import async_process
 
 load_dotenv()
 
@@ -280,16 +279,47 @@ def get_task_status(task_id):
 
 
 
-
 @app.route('/imap_email', methods=['POST'])
 @login_required
 def imap_email_route():
-    return imap_email()
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"error": "Missing JSON data"}), 400
+    
+    accounts = data.get('accounts', [])
+    max_attempts = data.get('max_attempts', 2)
+    
+    if not accounts:
+        return jsonify({"error": "Missing 'accounts' parameter"}), 400
+    
+    # Validate accounts format
+    for account in accounts:
+        if 'username' not in account or 'password' not in account:
+            return jsonify({"error": "Each account must include 'username' and 'password'"}), 400
+    
+    # Create task record and get task ID
+    task_id = insert_task('imap_email')
+    
+    # Start background thread to process task
+    thread = threading.Thread(target=async_process, args=(
+        task_id,
+        'imap',
+        accounts, 
+        None,
+        None,
+        None
+    ))
+    thread.start()
+    
+    return jsonify({
+        "status": "submitted",
+        "task_id": task_id,
+        "accounts_count": len(accounts),
+        "max_attempts": max_attempts
+    })
 
 
-@app.route('/submit_imap_task', methods=['POST'])
-def submit_imap_task_route():
-    return submit_imap_task()
 
     
 @app.route('/templates')

@@ -7,12 +7,11 @@ from mx import get_email_provider_type
 from cookie.crawlgmail import list_gmails
 from cookie.crawlyahoo import list_yahoo_emails
 from database import insert_task, capture_task_logs
-from submit_imap_task_api import async_claude_process
+from imap import async_claude_process
 
 
 def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list=None, user_agent_list=None):
     from cookie import cookie_crawl, token_crawl
-    from imap import IMAPEmailDownloader
     from crawl import process_email_accounts
     import traceback
     from database import update_task_status
