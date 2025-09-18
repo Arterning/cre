@@ -69,6 +69,28 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def api_key_or_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if user is logged in (web interface)
+        if 'logged_in' in session:
+            return f(*args, **kwargs)
+
+        # Check API key (third-party access)
+        api_key = request.headers.get('X-API-Key')
+        expected_key = os.environ.get('API_KEY')
+
+        if api_key and expected_key and api_key == expected_key:
+            return f(*args, **kwargs)
+
+        # Neither login nor valid API key
+        return jsonify({
+            'success': False,
+            'error': 'Invalid API key'
+        }), 401
+
+    return decorated_function
+
 
 
 
@@ -331,7 +353,7 @@ def templates():
 
 
 @app.route('/api/templates', methods=['GET'])
-@login_required
+@api_key_or_login_required
 def api_get_templates():
     """获取所有模板列表"""
     try:
@@ -358,7 +380,7 @@ def api_get_templates():
 
 
 @app.route('/api/templates/<template_name>', methods=['GET'])
-@login_required
+@api_key_or_login_required
 def api_get_template(template_name):
     """获取单个模板内容"""
     try:
@@ -377,7 +399,7 @@ def api_get_template(template_name):
 
 
 @app.route('/api/templates/<template_name>', methods=['PUT'])
-@login_required
+@api_key_or_login_required
 def api_update_template(template_name):
     """更新模板内容"""
     try:
@@ -400,7 +422,7 @@ def api_update_template(template_name):
 
 
 @app.route('/api/templates', methods=['POST'])
-@login_required
+@api_key_or_login_required
 def api_create_template():
     """创建新模板"""
     try:
@@ -428,7 +450,7 @@ def api_create_template():
 
 
 @app.route('/api/templates/<template_name>/copy', methods=['POST'])
-@login_required
+@api_key_or_login_required
 def api_copy_template(template_name):
     """复制模板"""
     try:
@@ -469,7 +491,7 @@ def api_copy_template(template_name):
 
 
 @app.route('/api/templates/<template_name>', methods=['DELETE'])
-@login_required
+@api_key_or_login_required
 def api_delete_template(template_name):
     """删除模板"""
     try:
