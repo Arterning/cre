@@ -756,9 +756,11 @@ def find_existing_template(domain: str = None) -> str:
         template_filename = "email_downloader_template.py"
     
     template_path = os.path.join(templates_dir, template_filename)
+    print(f"🔍 检查模板文件: {template_path}")
     if os.path.exists(template_path):
+        print(f"✅ 模板文件已存在: {template_path}")
         return template_path
-    
+    print(f"❌ 模板文件不存在: {template_path}")
     return None
 
 
