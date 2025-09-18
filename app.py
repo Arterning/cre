@@ -222,7 +222,7 @@ def submit_emails_route():
 def get_task_status(task_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('SELECT id, unique_code, crawl_type, status, total_emails, total_size, created_at, error FROM tasks WHERE id = ?', (task_id,))
+    c.execute('SELECT id, unique_code, crawl_type, status, total_emails, total_size, created_at, error, logs FROM tasks WHERE id = ?', (task_id,))
     row = c.fetchone()
     
     if not row:
@@ -255,6 +255,7 @@ def get_task_status(task_id):
         "total_size": row[5],
         "created_at": to_iso_format(row[6]),
         "error": row[7],
+        "logs": row[8],
         "details": []
     }
 
