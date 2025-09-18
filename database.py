@@ -1,8 +1,54 @@
 import sqlite3
 import uuid
 import time
+import sys
+import io
+from contextlib import contextmanager
 
 DB_PATH = 'tasks.db'
+
+class TaskLogCapture:
+    def __init__(self, task_id):
+        self.task_id = task_id
+        self.original_stdout = None
+
+    def write(self, text):
+        # 写入到原始stdout（保持正常显示）
+        if self.original_stdout:
+            self.original_stdout.write(text)
+            self.original_stdout.flush()
+
+        # 如果是实际内容（不是空字符或只有换行），立即追加到数据库
+        if text.strip():
+            append_task_log(self.task_id, text.rstrip())
+
+    def flush(self):
+        if self.original_stdout:
+            self.original_stdout.flush()
+
+    def start_capture(self):
+        self.original_stdout = sys.stdout
+        sys.stdout = self
+
+    def stop_capture(self):
+        if self.original_stdout:
+            sys.stdout = self.original_stdout
+
+    def __enter__(self):
+        self.start_capture()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop_capture()
+
+@contextmanager
+def capture_task_logs(task_id):
+    capture = TaskLogCapture(task_id)
+    try:
+        capture.start_capture()
+        yield capture
+    finally:
+        capture.stop_capture()
 
 def init_db():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -16,7 +62,8 @@ def init_db():
             total_emails INTEGER DEFAULT 0,
             total_size INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            error TEXT
+            error TEXT,
+            logs TEXT DEFAULT ''
         )
     ''')
     c.execute('''
@@ -53,6 +100,24 @@ def update_task_status(task_id, status, error=None, total_emails=0, total_size=0
     conn.commit()
     conn.close()
 
+def append_task_log(task_id, log_content):
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    c = conn.cursor()
+
+    timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+    formatted_log = f"[{timestamp}] {log_content}"
+
+    c.execute('SELECT logs FROM tasks WHERE id = ?', (task_id,))
+    result = c.fetchone()
+
+    if result:
+        existing_logs = result[0] or ''
+        new_logs = existing_logs + '\n' + formatted_log if existing_logs else formatted_log
+        c.execute('UPDATE tasks SET logs = ? WHERE id = ?', (new_logs, task_id))
+        conn.commit()
+
+    conn.close()
+
 def insert_task_detail(task_id, email, unique_code=None):
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
@@ -87,9 +152,9 @@ def get_tasks_paginated(page=1, per_page=10):
     
     # Get tasks with pagination
     c.execute('''
-        SELECT id, unique_code, crawl_type, status, total_emails, total_size, created_at, error
-        FROM tasks 
-        ORDER BY created_at DESC 
+        SELECT id, unique_code, crawl_type, status, total_emails, total_size, created_at, error, logs
+        FROM tasks
+        ORDER BY created_at DESC
         LIMIT ? OFFSET ?
     ''', (per_page, offset))
     
@@ -103,7 +168,8 @@ def get_tasks_paginated(page=1, per_page=10):
             'total_emails': row[4],
             'total_size': row[5],
             'created_at': row[6],
-            'error': row[7]
+            'error': row[7],
+            'logs': row[8]
         })
     
     conn.close()
