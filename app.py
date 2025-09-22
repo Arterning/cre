@@ -33,6 +33,9 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
 
+# 初始化数据库
+init_db()
+
 # 日志捕获系统
 class LogCapture:
     def __init__(self, max_lines=1000):
@@ -463,7 +466,3 @@ Content-Type: text/plain; charset=utf-8
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-# 启动前初始化数据库
-init_db()
