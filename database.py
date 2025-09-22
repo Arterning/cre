@@ -80,6 +80,19 @@ def init_db():
             FOREIGN KEY (task_id) REFERENCES tasks (id)
         )
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS templates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            path TEXT NOT NULL,
+            server_address TEXT,
+            protocol_type TEXT,
+            port INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (name)
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -238,3 +251,118 @@ def get_task_details(task_id):
     
     conn.close()
     return details
+
+
+def get_templates():
+    """获取所有模板列表"""
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    c = conn.cursor()
+    c.execute('''
+        SELECT name, path, server_address, protocol_type, port, created_at, updated_at
+        FROM templates
+        ORDER BY name
+    ''')
+    
+    templates = []
+    for row in c.fetchall():
+        templates.append({
+            'name': row[0],
+            'path': row[1],
+            'server_address': row[2],
+            'protocol_type': row[3],
+            'port': row[4],
+            'created_at': row[5],
+            'updated_at': row[6]
+        })
+    
+    conn.close()
+    return templates
+
+
+def get_template_by_name(name):
+    """根据名称获取模板"""
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    c = conn.cursor()
+    c.execute('''
+        SELECT name, path, server_address, protocol_type, port, created_at, updated_at
+        FROM templates
+        WHERE name = ?
+    ''', (name,))
+    
+    row = c.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            'name': row[0],
+            'path': row[1],
+            'server_address': row[2],
+            'protocol_type': row[3],
+            'port': row[4],
+            'created_at': row[5],
+            'updated_at': row[6]
+        }
+    return None
+
+
+def insert_template(name, path, server_address=None, protocol_type=None, port=None):
+    """插入新模板"""
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    c = conn.cursor()
+    try:
+        c.execute(
+            'INSERT INTO templates (name, path, server_address, protocol_type, port) VALUES (?, ?, ?, ?, ?)',
+            (name, path, server_address, protocol_type, port)
+        )
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        # 处理名称重复的情况
+        return False
+    finally:
+        conn.close()
+
+
+def update_template(name, path=None, server_address=None, protocol_type=None, port=None):
+    """更新模板信息"""
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    c = conn.cursor()
+    
+    # 构建更新语句
+    fields = []
+    params = []
+    
+    if path is not None:
+        fields.append('path = ?')
+        params.append(path)
+    if server_address is not None:
+        fields.append('server_address = ?')
+        params.append(server_address)
+    if protocol_type is not None:
+        fields.append('protocol_type = ?')
+        params.append(protocol_type)
+    if port is not None:
+        fields.append('port = ?')
+        params.append(port)
+    
+    # 总是更新更新时间
+    fields.append('updated_at = CURRENT_TIMESTAMP')
+    params.append(name)
+    
+    if fields:
+        sql = f'UPDATE templates SET {', '.join(fields)} WHERE name = ?'
+        c.execute(sql, params)
+        conn.commit()
+    
+    conn.close()
+
+
+def delete_template(name):
+    """删除模板"""
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    c = conn.cursor()
+    c.execute('DELETE FROM templates WHERE name = ?', (name,))
+    affected_rows = c.rowcount
+    conn.commit()
+    conn.close()
+    return affected_rows > 0
