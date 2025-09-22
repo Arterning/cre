@@ -32,7 +32,7 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
             if crawl_type == 'imap':
                 print("使用IMAP模式爬取邮件")
                 total_emails, total_size = async_claude_process(task_id, email_accounts, 2)
-            if crawl_type == 'default':
+            if crawl_type == 'default' or crawl_type is None:
                 print("使用默认模式爬取邮件")
                 total_emails, total_size = process_email_accounts(
                     task_id,
