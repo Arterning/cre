@@ -36,7 +36,8 @@ def init_templates_from_filesystem():
                         path=filename, 
                         server_address='', 
                         protocol_type='', 
-                        port=None
+                        port=None,
+                        type='default'
                     )
         
     except Exception as e:
@@ -79,6 +80,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                         'server_address': template['server_address'],
                         'protocol_type': template['protocol_type'],
                         'port': template['port'],
+                        'type': template.get('type', 'default'),
                         'created_at': template['created_at'],
                         'updated_at': template['updated_at']
                     }
@@ -120,6 +122,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 'server_address': template['server_address'],
                 'protocol_type': template['protocol_type'],
                 'port': template['port'],
+                'type': template.get('type', 'default'),
                 'created_at': template['created_at'],
                 'updated_at': template['updated_at']
             })
@@ -158,7 +161,8 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 path=data.get('path'),
                 server_address=data.get('server_address'),
                 protocol_type=data.get('protocol_type'),
-                port=data.get('port')
+                port=data.get('port'),
+                type=data.get('type')
             )
             
             return jsonify({'success': True, 'message': '模板更新成功'})
@@ -180,6 +184,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
             server_address = data.get('server_address')
             protocol_type = data.get('protocol_type')
             port = data.get('port')
+            type = data.get('type', 'default')
             
             # 默认path为模板名称，确保以.py结尾
             path = template_name
@@ -198,7 +203,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 f.write(content)
             
             # 插入数据库记录
-            success = insert_template(template_name, path, server_address, protocol_type, port)
+            success = insert_template(template_name, path, server_address, protocol_type, port, type)
             if not success:
                 # 如果数据库插入失败，删除已创建的文件
                 os.remove(filepath)
@@ -211,7 +216,8 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 'path': path,
                 'server_address': server_address,
                 'protocol_type': protocol_type,
-                'port': port
+                'port': port,
+                'type': type
             })
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
@@ -263,7 +269,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 dest.write(content)
             
             # 插入新模板到数据库
-            success = insert_template(new_name, new_path, source_template['server_address'], source_template['protocol_type'], source_template['port'])
+            success = insert_template(new_name, new_path, source_template['server_address'], source_template['protocol_type'], source_template['port'], source_template.get('type', 'default'))
             if not success:
                 # 如果数据库插入失败，删除已创建的文件
                 os.remove(dest_filepath)

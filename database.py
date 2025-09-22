@@ -88,6 +88,7 @@ def init_db():
             server_address TEXT,
             protocol_type TEXT,
             port INTEGER,
+            type TEXT DEFAULT 'default',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE (name)
@@ -258,7 +259,7 @@ def get_templates():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     c.execute('''
-        SELECT name, path, server_address, protocol_type, port, created_at, updated_at
+        SELECT name, path, server_address, protocol_type, port, type, created_at, updated_at
         FROM templates
         ORDER BY name
     ''')
@@ -271,8 +272,9 @@ def get_templates():
             'server_address': row[2],
             'protocol_type': row[3],
             'port': row[4],
-            'created_at': row[5],
-            'updated_at': row[6]
+            'type': row[5],
+            'created_at': row[6],
+            'updated_at': row[7]
         })
     
     conn.close()
@@ -284,7 +286,7 @@ def get_template_by_name(name):
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     c.execute('''
-        SELECT name, path, server_address, protocol_type, port, created_at, updated_at
+        SELECT name, path, server_address, protocol_type, port, type, created_at, updated_at
         FROM templates
         WHERE name = ?
     ''', (name,))
@@ -299,20 +301,21 @@ def get_template_by_name(name):
             'server_address': row[2],
             'protocol_type': row[3],
             'port': row[4],
-            'created_at': row[5],
-            'updated_at': row[6]
+            'type': row[5],
+            'created_at': row[6],
+            'updated_at': row[7]
         }
     return None
 
 
-def insert_template(name, path, server_address=None, protocol_type=None, port=None):
+def insert_template(name, path, server_address=None, protocol_type=None, port=None, type=None):
     """插入新模板"""
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     try:
         c.execute(
-            'INSERT INTO templates (name, path, server_address, protocol_type, port) VALUES (?, ?, ?, ?, ?)',
-            (name, path, server_address, protocol_type, port)
+            'INSERT INTO templates (name, path, server_address, protocol_type, port, type) VALUES (?, ?, ?, ?, ?, ?)',
+            (name, path, server_address, protocol_type, port, type)
         )
         conn.commit()
         return True
@@ -323,7 +326,7 @@ def insert_template(name, path, server_address=None, protocol_type=None, port=No
         conn.close()
 
 
-def update_template(name, path=None, server_address=None, protocol_type=None, port=None):
+def update_template(name, path=None, server_address=None, protocol_type=None, port=None, type=None):
     """更新模板信息"""
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
@@ -344,6 +347,9 @@ def update_template(name, path=None, server_address=None, protocol_type=None, po
     if port is not None:
         fields.append('port = ?')
         params.append(port)
+    if type is not None:
+        fields.append('type = ?')
+        params.append(type)
     
     # 总是更新更新时间
     fields.append('updated_at = CURRENT_TIMESTAMP')
