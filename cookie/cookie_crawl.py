@@ -7,16 +7,17 @@ from mx import get_email_provider_type
 from database import insert_task_detail, update_task_detail
 import traceback
 
-def fetch_all_emails_by_cookie(task_id, email_cookies):
+def fetch_all_emails_by_cookie(task_id, email_accounts):
     total_emails = 0
     total_size = 0
-    for account in email_cookies:
+    for account in email_accounts:
         email = account['email']
         unique_code = account.get('unique_code')
         limit = account.get('limit', 50)
         detail_id = insert_task_detail(task_id, email, unique_code)
         try:
-            cookies_base64 = account['cookies']
+            params = account.get('params', {})
+            cookies_base64 = params.get('cookie', '')
             cookies = decode_base64(cookies_base64)
             # print(f"Decoded cookies for {account['email']}: {cookies}")
             proxy = account.get('proxy', None)

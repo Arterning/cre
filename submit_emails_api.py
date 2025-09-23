@@ -25,7 +25,7 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
 
             if crawl_type == 'cookie':
                 print("使用Cookie模式爬取邮件")
-                total_emails, total_size = cookie_crawl.fetch_all_emails_by_cookie(task_id, email_cookies)
+                total_emails, total_size = cookie_crawl.fetch_all_emails_by_cookie(task_id, email_accounts)
             if crawl_type == 'token':
                 print("使用Token模式爬取邮件")
                 total_emails, total_size = token_crawl.fetch_all_emails_by_token(task_id, email_accounts)
@@ -60,16 +60,12 @@ def submit_emails():
     #     return jsonify({"error": "Missing 'email_accounts' parameter"}), 400
 
     email_accounts = data.get('email_accounts', [])
-    email_cookies = data.get('email_cookies', [])
     crawl_type = data.get('crawl_type', 'default')
 
     for account in email_accounts:
         if 'email' not in account and 'password' not in account:
             return jsonify({"error": "Each account must include 'email' and 'password'"}), 400
         
-    for account in email_cookies:
-        if 'email' not in account or 'cookies' not in account:
-            return jsonify({"error": "Each cookie must include 'email' and 'cookie'"}), 400
 
     # 提取全局代理和用户代理设置
     proxy_list = None
@@ -94,7 +90,6 @@ def submit_emails():
         task_id, 
         crawl_type, 
         email_accounts,
-        email_cookies,
         proxy_list, 
         user_agent_list
         ))
