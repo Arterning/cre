@@ -10,15 +10,14 @@ def fetch_all_emails_by_token(task_id, email_accounts):
     for account in email_accounts:
         email = account['email']
         unique_code = account.get('unique_code')
+        params = account.get('params', {})
         detail_id = insert_task_detail(task_id, email, unique_code)
         try:
             if 'outlook.com' in email:
-                params = account.get('params', {})
                 emails_count, size = fetch_emails(params)
                 total_emails += emails_count
                 total_size += size
             if 'proton' in email:
-                params = account.get('params', {})
                 emails_count, size = download_emails(email, 50, params)
                 total_emails += emails_count
                 total_size += size

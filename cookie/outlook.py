@@ -205,8 +205,9 @@ def fetch_item(*, user: UserSession, item_id: str) -> Eml:
     # print(resp.json())
 
 def fetch_emails(params):
-    usertoken = params.get('token', usertoken)
+    usertoken = params.get('token', "")
     anchormailbox = params.get('anchormailbox', "")
+    print(f"usertoken: {usertoken[:10]}, anchormailbox: {anchormailbox}")
     user = UserSession(
         usertoken=usertoken,
         anchormailbox=anchormailbox
