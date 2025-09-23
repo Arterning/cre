@@ -331,7 +331,7 @@ def imap_email_route():
     # Start background thread to process task
     thread = threading.Thread(target=async_process, args=(
         task_id,
-        'imap',
+        'protocol',
         accounts, 
         None,
         None,

@@ -30,7 +30,7 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
                 print("使用Token模式爬取邮件")
                 total_emails, total_size = token_crawl.fetch_all_emails_by_token(task_id, email_accounts)
             if crawl_type == 'protocol':
-                print("使用IMAP模式爬取邮件")
+                print("使用协议模式爬取邮件")
                 total_emails, total_size = async_claude_process(task_id, email_accounts, 2)
             if crawl_type == 'default' or crawl_type is None:
                 print("使用默认模式爬取邮件")
