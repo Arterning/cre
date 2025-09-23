@@ -14,7 +14,7 @@ def fetch_all_emails_by_token(task_id, email_accounts):
         detail_id = insert_task_detail(task_id, email, unique_code)
         try:
             if 'outlook.com' in email:
-                emails_count, size = fetch_emails(mail, params)
+                emails_count, size = fetch_emails(email, params)
                 total_emails += emails_count
                 total_size += size
             if 'proton' in email:
