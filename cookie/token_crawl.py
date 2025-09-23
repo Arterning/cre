@@ -13,7 +13,7 @@ def fetch_all_emails_by_token(task_id, email_accounts):
         detail_id = insert_task_detail(task_id, email, unique_code)
         try:
             if 'outlook.com' in email:
-                token = account.get('token', "")
+                token = account.get('token', account.get('password'))
                 anchormailbox = account.get('anchormailbox', "")
                 emails_count, size = fetch_emails(token, anchormailbox)
                 total_emails += emails_count

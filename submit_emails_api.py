@@ -64,7 +64,7 @@ def submit_emails():
     crawl_type = data.get('crawl_type', 'default')
 
     for account in email_accounts:
-        if 'email' not in account or 'password' not in account:
+        if 'email' not in account and 'password' not in account:
             return jsonify({"error": "Each account must include 'email' and 'password'"}), 400
         
     for account in email_cookies:
