@@ -96,18 +96,14 @@ def submit_emails():
     thread.start()
 
     if crawl_type == 'cookie':
-        for email in email_cookies:
-            if 'email' not in email or 'cookies' not in email:
-                return jsonify({"error": "Each cookie must include 'email' and 'cookie'"}), 400
         response = []    
         for email in email_accounts:
-            email_address = email['email']
-            response.append({"email": email_address, "status": "valid"})
-        for email in email_cookies:
             mails = 0
             email_address = email['email']
             try :
-                cookies = decode_base64(email['cookies'])
+                params = email.get('params', {})
+                cookie = params.get('cookie', None)
+                cookies = decode_base64(cookie)
             except Exception as e:
                 print(f"Failed to decode cookies for {email_address}: {e}")
                 response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
