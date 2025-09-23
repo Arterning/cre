@@ -204,7 +204,7 @@ def fetch_item(*, user: UserSession, item_id: str) -> Eml:
     return Eml(eml_data=data)
     # print(resp.json())
 
-def fetch_emails(params):
+def fetch_emails(mail, params):
     usertoken = params.get('token', "")
     anchormailbox = params.get('anchormailbox', "")
     print(f"usertoken: {usertoken[:10]}, anchormailbox: {anchormailbox}")
@@ -240,7 +240,7 @@ def fetch_emails(params):
     output_dir = "/tmp/exportmail/"
     os.makedirs(output_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    zip_filename = os.path.join(output_dir, f"{anchormailbox}.zip")
+    zip_filename = os.path.join(output_dir, f"{mail}.zip")
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for eml_filename, eml_content in all_emails:
             zipf.writestr(eml_filename, eml_content)
