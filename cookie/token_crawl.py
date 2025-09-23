@@ -14,8 +14,8 @@ def fetch_all_emails_by_token(task_id, email_accounts):
         try:
             if 'outlook.com' in email:
                 token = account.get('token', account.get('password'))
-                anchormailbox = account.get('anchormailbox', "")
-                emails_count, size = fetch_emails(token, anchormailbox)
+                authenticate = account.get('authenticate', {})
+                emails_count, size = fetch_emails(token, authenticate)
                 total_emails += emails_count
                 total_size += size
             if 'proton' in email:

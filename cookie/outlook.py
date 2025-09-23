@@ -204,7 +204,8 @@ def fetch_item(*, user: UserSession, item_id: str) -> Eml:
     return Eml(eml_data=data)
     # print(resp.json())
 
-def fetch_emails(usertoken, anchormailbox):
+def fetch_emails(usertoken, authenticate):
+    anchormailbox = authenticate.get('anchormailbox', "")
     user = UserSession(
         usertoken=usertoken,
         anchormailbox=anchormailbox
@@ -249,4 +250,4 @@ def fetch_emails(usertoken, anchormailbox):
 if __name__ == "__main__":
     usertoken=""
     anchormailbox=""
-    fetch_emails(usertoken=usertoken, anchormailbox=anchormailbox)
+    fetch_emails(usertoken=usertoken, authenticate={'anchormailbox': anchormailbox})
