@@ -129,6 +129,38 @@
                     <input type="text" id="template-name" name="name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="例: email_downloader_example.com_template">
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="template-type" class="block text-sm font-medium text-gray-700">模板类型</label>
+                        <select id="template-type" name="type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="协议收邮">协议收邮</option>
+                            <option value="Cookie收邮">Cookie收邮</option>
+                            <option value="网页收邮">网页收邮</option>
+                            <option value="接口收邮">接口收邮</option>
+                            <option value="接口收邮">其他</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="template-server-address" class="block text-sm font-medium text-gray-700">服务器地址</label>
+                        <input type="text" id="template-server-address" name="server_address" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="如: imap.example.com">
+                    </div>
+
+                    <div>
+                        <label for="template-protocol-type" class="block text-sm font-medium text-gray-700">协议类型</label>
+                        <select id="template-protocol-type" name="protocol_type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="">选择协议</option>
+                            <option value="IMAP">IMAP</option>
+                            <option value="POP3">POP3</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="template-port" class="block text-sm font-medium text-gray-700">端口</label>
+                        <input type="number" id="template-port" name="port" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="如: 993">
+                    </div>
+                </div>
+
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label for="template-content" class="block text-sm font-medium text-gray-700">模板内容</label>
@@ -282,9 +314,13 @@ function renderTemplates(templates) {
 
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-gray-900 truncate">${template.name}</p>
-                                <div class="flex items-center mt-2 text-sm text-gray-500 space-x-4">
+                                <div class="flex items-center mt-2 text-sm text-gray-500 space-x-4 flex-wrap">
                                     <span>修改时间: ${template.modified}</span>
                                     <span>大小: ${(template.size / 1024).toFixed(1)} KB</span>
+                                    <span>类型: ${template.type || 'default'}</span>
+                                    ${template.server_address ? `<span>服务器: ${template.server_address}</span>` : ''}
+                                    ${template.protocol_type ? `<span>协议: ${template.protocol_type}</span>` : ''}
+                                    ${template.port ? `<span>端口: ${template.port}</span>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -320,11 +356,18 @@ function renderTemplates(templates) {
 
 function showCreateModal() {
     currentEditTemplate = null;
-    document.getElementById('modal-title').textContent = '新建模板';
-    document.getElementById('template-name').value = '';
-    codeEditor.setValue('');
-    document.getElementById('template-name').disabled = false;
-    document.getElementById('template-modal').classList.remove('hidden');
+        document.getElementById('modal-title').textContent = '新建模板';
+        document.getElementById('template-name').value = '';
+        codeEditor.setValue('');
+        
+        // 重置其他字段
+        document.getElementById('template-type').value = 'default';
+        document.getElementById('template-server-address').value = '';
+        document.getElementById('template-protocol-type').value = '';
+        document.getElementById('template-port').value = '';
+        
+        document.getElementById('template-name').disabled = false;
+        document.getElementById('template-modal').classList.remove('hidden');
 
     // Refresh CodeMirror after modal is shown
     setTimeout(() => {
@@ -343,6 +386,13 @@ async function editTemplate(templateName) {
             document.getElementById('modal-title').textContent = '编辑模板';
             document.getElementById('template-name').value = templateName;
             codeEditor.setValue(data.content);
+            
+            // 填充其他字段
+            document.getElementById('template-type').value = data.type || 'default';
+            document.getElementById('template-server-address').value = data.server_address || '';
+            document.getElementById('template-protocol-type').value = data.protocol_type || '';
+            document.getElementById('template-port').value = data.port || '';
+            
             document.getElementById('template-name').disabled = true;
             document.getElementById('template-modal').classList.remove('hidden');
 
@@ -402,7 +452,11 @@ document.getElementById('template-form').addEventListener('submit', async functi
     const formData = new FormData(e.target);
     const data = {
         name: formData.get('name'),
-        content: codeEditor.getValue()
+        content: codeEditor.getValue(),
+        type: formData.get('type'),
+        server_address: formData.get('server_address'),
+        protocol_type: formData.get('protocol_type'),
+        port: formData.get('port') ? parseInt(formData.get('port')) : null
     };
 
     try {

@@ -279,7 +279,11 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 'success': True, 
                 'message': '模板复制成功', 
                 'new_name': new_name,
-                'new_path': new_path
+                'new_path': new_path,
+                'server_address': source_template['server_address'],
+                'protocol_type': source_template['protocol_type'],
+                'port': source_template['port'],
+                'type': source_template.get('type', 'default')
             })
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
