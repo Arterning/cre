@@ -22,9 +22,10 @@ def async_claude_process(task_id, accounts, max_attempts):
         for account in accounts:
             username = account.get('username', account.get('email'))
             password = account['password']
+            unique_code = account.get('unique_code')
             
             # Create task detail record for this account
-            detail_id = insert_task_detail(task_id, username)
+            detail_id = insert_task_detail(task_id, username, unique_code)
             
             account_email_count = 0
             account_total_size = 0
