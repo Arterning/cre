@@ -1016,8 +1016,8 @@ def auto_codegen_pipeline(api_key: str, base_prompt: str, model: str, max_tokens
                 # 处理邮件目录（脚本直接在client_path下执行，无需移动）
                 handle_template_email_merge(client_path, username)
                 
-                # 成功时，将脚本复制到templates目录作为模板
-                templates_dir = "templates"
+                # 成功时，将脚本复制到ai/templates目录作为模板
+                templates_dir = "ai/templates"
                 os.makedirs(templates_dir, exist_ok=True)
                 template_script_path = copy_successful_script(entry, templates_dir, attempt_dir, username, password, domain)
                 
