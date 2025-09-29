@@ -77,7 +77,10 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 if os.path.exists(filepath):
                     stat = os.stat(filepath)
                     import json
-                    web_dom_json = json.loads(template.get('web_dom', '{}'))
+                    try :
+                        web_dom_json = json.loads(template.get('web_dom', '{}'))
+                    except json.JSONDecodeError:
+                        web_dom_json = {}
                     template_info = {
                         'name': template['name'],
                         'path': template['path'],
@@ -124,6 +127,11 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 content = f.read()
 
             import json
+
+            try :
+                web_dom_json = json.loads(template.get('web_dom', '{}'))
+            except json.JSONDecodeError:
+                web_dom_json = {}
             
             # 返回模板内容和数据库中的模板信息
             return jsonify({
@@ -138,7 +146,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 'api_address': template.get('api_address'),
                 'login_address': template.get('login_address'),
                 'redirect_address': template.get('redirect_address'),
-                'web_dom': json.loads(template.get('web_dom', '{}')),
+                'web_dom': web_dom_json,
                 'created_at': template['created_at'],
                 'updated_at': template['updated_at']
             })
