@@ -167,6 +167,21 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write(data['content'])
             
+            # 验证web_dom字段是否为有效的JSON格式（如果提供了）
+            web_dom = data.get('web_dom')
+            if web_dom:
+                import json
+                try:
+                    web_dom_json = json.loads(web_dom)
+                    # 检查是否包含必要的字段
+                    if not isinstance(web_dom_json, dict):
+                        return jsonify({'success': False, 'error': 'web_dom必须是JSON对象格式'}), 400
+                    
+                    # 重新格式化JSON字符串，确保格式统一
+                    web_dom = json.dumps(web_dom_json, ensure_ascii=False)
+                except json.JSONDecodeError:
+                    return jsonify({'success': False, 'error': 'web_dom不是有效的JSON格式'}), 400
+            
             # 更新数据库记录
             update_template(
                 template_name,
@@ -178,7 +193,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 api_address=data.get('api_address'),
                 login_address=data.get('login_address'),
                 redirect_address=data.get('redirect_address'),
-                web_dom=data.get('web_dom')
+                web_dom=web_dom
             )
             
             return jsonify({'success': True, 'message': '模板更新成功'})
@@ -205,6 +220,20 @@ def register_template_routes(app, login_required, api_key_or_login_required):
             login_address = data.get('login_address')
             redirect_address = data.get('redirect_address')
             web_dom = data.get('web_dom')
+            
+            # 验证web_dom字段是否为有效的JSON格式
+            if web_dom:
+                import json
+                try:
+                    web_dom_json = json.loads(web_dom)
+                    # 检查是否包含必要的字段
+                    if not isinstance(web_dom_json, dict):
+                        return jsonify({'success': False, 'error': 'web_dom必须是JSON对象格式'}), 400
+                    
+                    # 重新格式化JSON字符串，确保格式统一
+                    web_dom = json.dumps(web_dom_json, ensure_ascii=False)
+                except json.JSONDecodeError:
+                    return jsonify({'success': False, 'error': 'web_dom不是有效的JSON格式'}), 400
             
             # 默认path为模板名称，确保以.py结尾
             path = template_name
@@ -292,6 +321,23 @@ def register_template_routes(app, login_required, api_key_or_login_required):
             with open(dest_filepath, 'w', encoding='utf-8') as dest:
                 dest.write(content)
             
+            # 验证并处理web_dom字段
+            web_dom = source_template.get('web_dom')
+            if web_dom:
+                import json
+                try:
+                    web_dom_json = json.loads(web_dom)
+                    # 检查是否包含必要的字段
+                    if not isinstance(web_dom_json, dict):
+                        web_dom = ''  # 如果不是有效的JSON对象，设置为空字符串
+                    elif 'email_input' not in web_dom_json or 'password_input' not in web_dom_json:
+                        # 如果缺少必要的字段，补充默认值
+                        web_dom_json.setdefault('email_input', '')
+                        web_dom_json.setdefault('password_input', '')
+                        web_dom = json.dumps(web_dom_json, ensure_ascii=False)
+                except json.JSONDecodeError:
+                    web_dom = ''  # 如果不是有效的JSON格式，设置为空字符串
+            
             # 插入新模板到数据库
             success = insert_template(
                 new_name, 
@@ -303,7 +349,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 source_template.get('api_address'),
                 source_template.get('login_address'),
                 source_template.get('redirect_address'),
-                source_template.get('web_dom')
+                web_dom
             )
             if not success:
                 # 如果数据库插入失败，删除已创建的文件
@@ -313,7 +359,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
             return jsonify({
                 'success': True, 
                 'message': '模板复制成功', 
-                'new_name': new_name,
+                'new_name': new_name, 
                 'new_path': new_path,
                 'server_address': source_template['server_address'],
                 'protocol_type': source_template['protocol_type'],
@@ -322,7 +368,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 'api_address': source_template.get('api_address'),
                 'login_address': source_template.get('login_address'),
                 'redirect_address': source_template.get('redirect_address'),
-                'web_dom': source_template.get('web_dom')
+                'web_dom': web_dom
             })
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500

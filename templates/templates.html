@@ -176,8 +176,9 @@
                     </div>
 
                     <div>
-                        <label for="template-web-dom" class="block text-sm font-medium text-gray-700">Web DOM</label>
-                        <input type="text" id="template-web-dom" name="web_dom" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="Web DOM">
+                        <label for="template-web-dom" class="block text-sm font-medium text-gray-700">Web DOM (JSON格式)</label>
+                        <div class="text-xs text-gray-500 mb-1">请输入JSON格式，包含email_input和password_input字段，例如: {&#34;email_input&#34;: &#34;input#email&#34;, &#34;password_input&#34;: &#34;input#password&#34;}</div>
+                        <textarea id="template-web-dom" name="web_dom" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="{&#34;email_input&#34;: &#34;&#34;, &#34;password_input&#34;: &#34;&#34;}"></textarea>
                     </div>
                 </div>
 
