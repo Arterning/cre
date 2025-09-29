@@ -76,6 +76,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 
                 if os.path.exists(filepath):
                     stat = os.stat(filepath)
+                    import json
                     web_dom_json = json.loads(template.get('web_dom', '{}'))
                     template_info = {
                         'name': template['name'],
@@ -121,6 +122,8 @@ def register_template_routes(app, login_required, api_key_or_login_required):
             
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
+
+            import json
             
             # 返回模板内容和数据库中的模板信息
             return jsonify({
