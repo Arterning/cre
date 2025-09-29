@@ -87,14 +87,14 @@ def init_db():
             path TEXT NOT NULL,
             server_address TEXT,
             protocol_type TEXT,
-            api_address TEXT,
-            login_address TEXT,
-            redirect_address TEXT,
-            web_dom TEXT,
             port INTEGER,
             type TEXT DEFAULT 'default',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            api_address TEXT,
+            login_address TEXT,
+            redirect_address TEXT,
+            web_dom TEXT,
             UNIQUE (name)
         )
     ''')
@@ -263,10 +263,10 @@ def get_templates():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     c.execute('''
-        SELECT name, path, server_address, protocol_type, port, type, api_address, login_address, redirect_address, web_dom, created_at, updated_at
+        SELECT name, path, server_address, protocol_type, port, type, created_at, updated_at, api_address, login_address, redirect_address, web_dom
         FROM templates
         ORDER BY name
-    ''')
+    '''
     
     templates = []
     for row in c.fetchall():
@@ -277,12 +277,12 @@ def get_templates():
             'protocol_type': row[3],
             'port': row[4],
             'type': row[5],
-            'api_address': row[6],
-            'login_address': row[7],
-            'redirect_address': row[8],
-            'web_dom': row[9],
-            'created_at': row[10],
-            'updated_at': row[11]
+            'created_at': row[6],
+            'updated_at': row[7],
+            'api_address': row[8],
+            'login_address': row[9],
+            'redirect_address': row[10],
+            'web_dom': row[11]
         })
     
     conn.close()
@@ -294,7 +294,7 @@ def get_template_by_name(name):
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     c.execute('''
-        SELECT name, path, server_address, protocol_type, port, type, api_address, login_address, redirect_address, web_dom, created_at, updated_at
+        SELECT name, path, server_address, protocol_type, port, type, created_at, updated_at, api_address, login_address, redirect_address, web_dom
         FROM templates
         WHERE name = ?
     ''', (name,))
@@ -310,12 +310,12 @@ def get_template_by_name(name):
             'protocol_type': row[3],
             'port': row[4],
             'type': row[5],
-            'api_address': row[6],
-            'login_address': row[7],
-            'redirect_address': row[8],
-            'web_dom': row[9],
-            'created_at': row[10],
-            'updated_at': row[11]
+            'created_at': row[6],
+            'updated_at': row[7],
+            'api_address': row[8],
+            'login_address': row[9],
+            'redirect_address': row[10],
+            'web_dom': row[11]
         }
     return None
 
