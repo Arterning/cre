@@ -87,6 +87,10 @@ def init_db():
             path TEXT NOT NULL,
             server_address TEXT,
             protocol_type TEXT,
+            api_address TEXT,
+            login_address TEXT,
+            redirect_address TEXT,
+            web_dom TEXT,
             port INTEGER,
             type TEXT DEFAULT 'default',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -259,7 +263,7 @@ def get_templates():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     c.execute('''
-        SELECT name, path, server_address, protocol_type, port, type, created_at, updated_at
+        SELECT name, path, server_address, protocol_type, port, type, api_address, login_address, redirect_address, web_dom, created_at, updated_at
         FROM templates
         ORDER BY name
     ''')
@@ -273,8 +277,12 @@ def get_templates():
             'protocol_type': row[3],
             'port': row[4],
             'type': row[5],
-            'created_at': row[6],
-            'updated_at': row[7]
+            'api_address': row[6],
+            'login_address': row[7],
+            'redirect_address': row[8],
+            'web_dom': row[9],
+            'created_at': row[10],
+            'updated_at': row[11]
         })
     
     conn.close()
@@ -286,7 +294,7 @@ def get_template_by_name(name):
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     c.execute('''
-        SELECT name, path, server_address, protocol_type, port, type, created_at, updated_at
+        SELECT name, path, server_address, protocol_type, port, type, api_address, login_address, redirect_address, web_dom, created_at, updated_at
         FROM templates
         WHERE name = ?
     ''', (name,))
@@ -302,20 +310,24 @@ def get_template_by_name(name):
             'protocol_type': row[3],
             'port': row[4],
             'type': row[5],
-            'created_at': row[6],
-            'updated_at': row[7]
+            'api_address': row[6],
+            'login_address': row[7],
+            'redirect_address': row[8],
+            'web_dom': row[9],
+            'created_at': row[10],
+            'updated_at': row[11]
         }
     return None
 
 
-def insert_template(name, path, server_address=None, protocol_type=None, port=None, type=None):
+def insert_template(name, path, server_address=None, protocol_type=None, port=None, type=None, api_address=None, login_address=None, redirect_address=None, web_dom=None):
     """插入新模板"""
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     try:
         c.execute(
-            'INSERT INTO templates (name, path, server_address, protocol_type, port, type) VALUES (?, ?, ?, ?, ?, ?)',
-            (name, path, server_address, protocol_type, port, type)
+            'INSERT INTO templates (name, path, server_address, protocol_type, port, type, api_address, login_address, redirect_address, web_dom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            (name, path, server_address, protocol_type, port, type, api_address, login_address, redirect_address, web_dom)
         )
         conn.commit()
         return True
@@ -326,7 +338,7 @@ def insert_template(name, path, server_address=None, protocol_type=None, port=No
         conn.close()
 
 
-def update_template(name, path=None, server_address=None, protocol_type=None, port=None, type=None):
+def update_template(name, path=None, server_address=None, protocol_type=None, port=None, type=None, api_address=None, login_address=None, redirect_address=None, web_dom=None):
     """更新模板信息"""
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
@@ -350,6 +362,18 @@ def update_template(name, path=None, server_address=None, protocol_type=None, po
     if type is not None:
         fields.append('type = ?')
         params.append(type)
+    if api_address is not None:
+        fields.append('api_address = ?')
+        params.append(api_address)
+    if login_address is not None:
+        fields.append('login_address = ?')
+        params.append(login_address)
+    if redirect_address is not None:
+        fields.append('redirect_address = ?')
+        params.append(redirect_address)
+    if web_dom is not None:
+        fields.append('web_dom = ?')
+        params.append(web_dom)
     
     # 总是更新更新时间
     fields.append('updated_at = CURRENT_TIMESTAMP')

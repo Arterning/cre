@@ -159,6 +159,26 @@
                         <label for="template-port" class="block text-sm font-medium text-gray-700">端口</label>
                         <input type="number" id="template-port" name="port" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="如: 993">
                     </div>
+
+                    <div>
+                        <label for="template-api-address" class="block text-sm font-medium text-gray-700">API 地址</label>
+                        <input type="text" id="template-api-address" name="api_address" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="API 地址">
+                    </div>
+
+                    <div>
+                        <label for="template-login-address" class="block text-sm font-medium text-gray-700">登录地址</label>
+                        <input type="text" id="template-login-address" name="login_address" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="登录地址">
+                    </div>
+
+                    <div>
+                        <label for="template-redirect-address" class="block text-sm font-medium text-gray-700">重定向地址</label>
+                        <input type="text" id="template-redirect-address" name="redirect_address" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="重定向地址">
+                    </div>
+
+                    <div>
+                        <label for="template-web-dom" class="block text-sm font-medium text-gray-700">Web DOM</label>
+                        <input type="text" id="template-web-dom" name="web_dom" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="Web DOM">
+                    </div>
                 </div>
 
                 <div>
@@ -321,6 +341,10 @@ function renderTemplates(templates) {
                                     ${template.server_address ? `<span>服务器: ${template.server_address}</span>` : ''}
                                     ${template.protocol_type ? `<span>协议: ${template.protocol_type}</span>` : ''}
                                     ${template.port ? `<span>端口: ${template.port}</span>` : ''}
+                                    ${template.api_address ? `<span>API地址: ${template.api_address}</span>` : ''}
+                                    ${template.login_address ? `<span>登录地址: ${template.login_address}</span>` : ''}
+                                    ${template.redirect_address ? `<span>重定向地址: ${template.redirect_address}</span>` : ''}
+                                    ${template.web_dom ? `<span>Web DOM: ${template.web_dom}</span>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -365,6 +389,10 @@ function showCreateModal() {
         document.getElementById('template-server-address').value = '';
         document.getElementById('template-protocol-type').value = '';
         document.getElementById('template-port').value = '';
+        document.getElementById('template-api-address').value = '';
+        document.getElementById('template-login-address').value = '';
+        document.getElementById('template-redirect-address').value = '';
+        document.getElementById('template-web-dom').value = '';
         
         document.getElementById('template-name').disabled = false;
         document.getElementById('template-modal').classList.remove('hidden');
@@ -392,6 +420,10 @@ async function editTemplate(templateName) {
             document.getElementById('template-server-address').value = data.server_address || '';
             document.getElementById('template-protocol-type').value = data.protocol_type || '';
             document.getElementById('template-port').value = data.port || '';
+            document.getElementById('template-api-address').value = data.api_address || '';
+            document.getElementById('template-login-address').value = data.login_address || '';
+            document.getElementById('template-redirect-address').value = data.redirect_address || '';
+            document.getElementById('template-web-dom').value = data.web_dom || '';
             
             document.getElementById('template-name').disabled = true;
             document.getElementById('template-modal').classList.remove('hidden');
@@ -451,13 +483,17 @@ document.getElementById('template-form').addEventListener('submit', async functi
 
     const formData = new FormData(e.target);
     const data = {
-        name: formData.get('name'),
-        content: codeEditor.getValue(),
-        type: formData.get('type'),
-        server_address: formData.get('server_address'),
-        protocol_type: formData.get('protocol_type'),
-        port: formData.get('port') ? parseInt(formData.get('port')) : null
-    };
+            name: formData.get('name'),
+            content: codeEditor.getValue(),
+            type: formData.get('type'),
+            server_address: formData.get('server_address'),
+            protocol_type: formData.get('protocol_type'),
+            port: formData.get('port') ? parseInt(formData.get('port')) : null,
+            api_address: formData.get('api_address'),
+            login_address: formData.get('login_address'),
+            redirect_address: formData.get('redirect_address'),
+            web_dom: formData.get('web_dom')
+        };
 
     try {
         let response;
