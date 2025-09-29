@@ -12,7 +12,6 @@ import argparse
 from datetime import datetime
 import random
 from database import insert_task_detail, update_task_detail
-import traceback
 
 
 def create_directory(path):
@@ -370,9 +369,6 @@ def zip_email_files(email, output_dir):
 
     return total_size
 
-
-from database import insert_task_detail, update_task_detail
-import traceback
 
 def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail", proxy_list=None, user_agent_list=None):
     """处理多个邮箱账号"""
