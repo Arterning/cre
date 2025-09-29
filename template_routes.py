@@ -76,6 +76,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 
                 if os.path.exists(filepath):
                     stat = os.stat(filepath)
+                    web_dom_json = json.loads(template.get('web_dom', '{}'))
                     template_info = {
                         'name': template['name'],
                         'path': template['path'],
@@ -88,7 +89,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                         'api_address': template.get('api_address'),
                         'login_address': template.get('login_address'),
                         'redirect_address': template.get('redirect_address'),
-                        'web_dom': template.get('web_dom'),
+                        'web_dom': web_dom_json,
                         'created_at': template['created_at'],
                         'updated_at': template['updated_at']
                     }
@@ -134,7 +135,7 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 'api_address': template.get('api_address'),
                 'login_address': template.get('login_address'),
                 'redirect_address': template.get('redirect_address'),
-                'web_dom': template.get('web_dom'),
+                'web_dom': json.loads(template.get('web_dom', '{}')),
                 'created_at': template['created_at'],
                 'updated_at': template['updated_at']
             })
