@@ -5,6 +5,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, jsonify, request
 from functools import wraps
 from database import get_templates, get_template_by_name, insert_template, update_template, delete_template
+import json
 
 # 创建蓝图
 template_bp = Blueprint('templates', __name__)
