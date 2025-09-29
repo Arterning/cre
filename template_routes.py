@@ -102,6 +102,8 @@ def register_template_routes(app, login_required, api_key_or_login_required):
             templates.sort(key=lambda x: x['name'])
             return jsonify({'success': True, 'templates': templates})
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return jsonify({'success': False, 'error': str(e)}), 500
 
 
