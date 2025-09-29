@@ -23,7 +23,7 @@ def process_email_account(email, password, output_dir, proxy_list=None, user_age
     # 配置 Chrome 选项
     chrome_options = Options()
     chrome_options.add_argument("--lang=zh-CN")
-    # chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
 
