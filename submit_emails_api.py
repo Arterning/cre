@@ -11,8 +11,9 @@ from imap import async_claude_process
 
 
 def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list=None, user_agent_list=None):
-    from cookie import cookie_crawl, token_crawl
-    from crawl import process_email_accounts
+    from cookie import cookie_crawl
+    from api import token_crawl
+    from web.login_outlook import process_email_accounts
     import traceback
     from database import update_task_status
 

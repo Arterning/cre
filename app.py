@@ -12,9 +12,7 @@ import zipfile
 from collections import deque
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify, send_file, render_template, redirect, url_for, session, flash
-from crawl import process_email_accounts
 
-from cookie import cookie_crawl, token_crawl
 from cookie.crawlgmail import list_gmails
 from cookie.crawlyahoo import list_yahoo_emails
 from convert import decode_base64
