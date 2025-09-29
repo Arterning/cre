@@ -266,7 +266,7 @@ def get_templates():
         SELECT name, path, server_address, protocol_type, port, type, created_at, updated_at, api_address, login_address, redirect_address, web_dom
         FROM templates
         ORDER BY name
-    '''
+    ''')
     
     templates = []
     for row in c.fetchall():
