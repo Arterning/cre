@@ -23,7 +23,7 @@ def process_email_account(email, password, output_dir, proxy_list=None, user_age
     # 配置 Chrome 选项
     chrome_options = Options()
     chrome_options.add_argument("--lang=zh-CN")
-    chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
 
@@ -160,6 +160,23 @@ def process_email_account(email, password, output_dir, proxy_list=None, user_age
         )
         time.sleep(2)
         next_button.click()
+
+
+        # 检查是否需要点击特殊元素
+        try:
+            # 尝试找到并点击指定元素
+            special_element = wait.until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "#view > div > span:nth-child(6) > div > span"))
+            )
+            print("验证你的电子邮件地址的提示出现")
+            special_element.click()
+            time.sleep(1)
+        except:
+            # 如果元素不存在或点击失败，则继续流程
+            print("验证你的电子邮件地址的提示未出现，继续流程")
+            pass
+
+        # 输入密码
 
         password_field = wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "input#passwordEntry"))
