@@ -76,10 +76,13 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 
                 if os.path.exists(filepath):
                     stat = os.stat(filepath)
-                    import json
-                    try :
-                        web_dom_json = json.loads(template.get('web_dom', '{}'))
-                    except json.JSONDecodeError:
+                    # 确保 web_dom 是字符串类型
+                    web_dom_str = template.get('web_dom', '{}')
+                    if web_dom_str is None:
+                        web_dom_str = '{}'
+                    try:
+                        web_dom_json = json.loads(web_dom_str)
+                    except (json.JSONDecodeError, TypeError):
                         web_dom_json = {}
                     template_info = {
                         'name': template['name'],
@@ -128,11 +131,13 @@ def register_template_routes(app, login_required, api_key_or_login_required):
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            import json
-
-            try :
-                web_dom_json = json.loads(template.get('web_dom', '{}'))
-            except json.JSONDecodeError:
+            # 确保 web_dom 是字符串类型
+            web_dom_str = template.get('web_dom', '{}')
+            if web_dom_str is None:
+                web_dom_str = '{}'
+            try:
+                web_dom_json = json.loads(web_dom_str)
+            except (json.JSONDecodeError, TypeError):
                 web_dom_json = {}
             
             # 返回模板内容和数据库中的模板信息
