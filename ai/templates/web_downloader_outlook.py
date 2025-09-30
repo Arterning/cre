@@ -1,11 +1,69 @@
 import os
 import time
 import random
+import os
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+
+
+def test_proxy(proxy, chrome_options):
+    """测试代理是否工作"""
+    try:
+        print(f"尝试代理: {proxy}")
+        
+        # 复制Chrome选项，避免修改原选项
+        test_options = Options()
+        for arg in chrome_options.arguments:
+            test_options.add_argument(arg)
+        
+        # 设置代理
+        if proxy.startswith('socks5://'):
+            # 处理带认证的socks5代理
+            if '@' in proxy:
+                # 格式: socks5://username:password@host:port
+                proxy_parts = proxy.split('@')
+                auth_part = proxy_parts[0].replace('socks5://', '')
+                username, password_proxy = auth_part.split(':')
+                host_port = proxy_parts[1]
+                test_options.add_argument(f'--proxy-server=socks5://{host_port}')
+                test_options.add_argument(f'--proxy-auth={username}:{password_proxy}')
+            else:
+                # 处理不带认证的
+                if 'socks5://' in proxy:
+                    # 格式: socks5://host:port
+                    host_port = proxy.replace('socks5://', '')
+                    test_options.add_argument(f'--proxy-server=socks5://{host_port}')
+        else:
+            # 处理http/https代理
+            test_options.add_argument(f'--proxy-server={proxy}')
+
+        # 启动 Chrome 浏览器测试代理
+        driver = webdriver.Chrome(options=test_options)
+        wait = WebDriverWait(driver, 10)
+        
+        # 测试代理是否工作
+        driver.get("https://httpbin.org/ip")
+        time.sleep(2)
+        
+        # 如果页面加载成功，认为代理可用
+        if "origin" in driver.page_source.lower():
+            print(f"代理 {proxy} 连接成功")
+            proxy_success = True
+        else:
+            print(f"代理 {proxy} 连接失败，尝试下一个")
+            proxy_success = False
+        driver.quit()
+        return proxy_success
+    except Exception as e:
+        print(f"代理 {proxy} 测试失败: {str(e)}")
+        try:
+            driver.quit()
+        except:
+            pass
+        return False
 
 
 def process_email_account(email, password, output_dir, proxy_list=None, user_agent_list=None):
@@ -41,10 +99,9 @@ def process_email_account(email, password, output_dir, proxy_list=None, user_age
     proxy_success = False
     if proxy_list and isinstance(proxy_list, list):
         for proxy in proxy_list:
-            try:
-                print(f"尝试代理: {proxy}")
-                
-                # 设置代理
+            if test_proxy(proxy, chrome_options):
+                proxy_success = True
+                # 设置成功的代理到chrome_options
                 if proxy.startswith('socks5://'):
                     # 处理带认证的socks5代理
                     if '@' in proxy:
@@ -64,53 +121,14 @@ def process_email_account(email, password, output_dir, proxy_list=None, user_age
                 else:
                     # 处理http/https代理
                     chrome_options.add_argument(f'--proxy-server={proxy}')
-
-                # 启动 Chrome 浏览器测试代理
-                driver = webdriver.Chrome(options=chrome_options)
-                wait = WebDriverWait(driver, 10)
-                
-                # 测试代理是否工作
-                driver.get("https://httpbin.org/ip")
-                time.sleep(2)
-                
-                # 如果页面加载成功，认为代理可用
-                if "origin" in driver.page_source.lower():
-                    print(f"代理 {proxy} 连接成功")
-                    proxy_success = True
-                    break
-                else:
-                    print(f"代理 {proxy} 连接失败，尝试下一个")
-                    driver.quit()
-                    
-            except Exception as e:
-                print(f"代理 {proxy} 测试失败: {str(e)}")
-                try:
-                    driver.quit()
-                except:
-                    pass
-                continue
+                break
         
-        if not proxy_success:
-            print("所有代理都连接失败，使用无代理模式")
-            # 重新创建Chrome选项，不包含代理设置
-            chrome_options = Options()
-            chrome_options.add_argument("--lang=zh-CN")
-            chrome_options.add_argument("--headless")
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            
-            if user_agent:
-                chrome_options.add_argument(f"user-agent={user_agent}")
-            else:
-                chrome_options.add_argument(
-                    "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/137.0.0.0 Safari/537.36"
-                )
+        
     else:
         # 单个代理的情况（向后兼容）
         proxy = proxy_list if isinstance(proxy_list, str) else None
-        if proxy:
+        print(f"使用代理: {proxy}")
+        if proxy and test_proxy(proxy, chrome_options):
             if proxy.startswith('socks5://'):
                 # 处理带认证的socks5代理
                 if '@' in proxy:
@@ -130,6 +148,25 @@ def process_email_account(email, password, output_dir, proxy_list=None, user_age
             else:
                 # 处理http/https代理
                 chrome_options.add_argument(f'--proxy-server={proxy}')
+
+
+    if not proxy_success:
+        print("所有代理都连接失败，使用无代理模式")
+        # 重新创建Chrome选项，不包含代理设置
+        chrome_options = Options()
+        chrome_options.add_argument("--lang=zh-CN")
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        
+        if user_agent:
+            chrome_options.add_argument(f"user-agent={user_agent}")
+        else:
+            chrome_options.add_argument(
+                "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/137.0.0.0 Safari/537.36"
+            )
 
     # 设置下载参数
     chrome_options.add_experimental_option("prefs", {
