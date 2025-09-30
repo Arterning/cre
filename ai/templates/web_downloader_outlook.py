@@ -53,12 +53,12 @@ def test_proxy(proxy, chrome_options):
             print(f"代理 {proxy} 连接成功")
             proxy_success = True
         else:
-            print(f"代理 {proxy} 连接失败，尝试下一个")
+            # print(f"代理 {proxy} 连接失败，尝试下一个")
             proxy_success = False
         driver.quit()
         return proxy_success
     except Exception as e:
-        print(f"代理 {proxy} 测试失败: {str(e)}")
+        # print(f"代理 {proxy} 测试失败: {str(e)}")
         try:
             driver.quit()
         except:
@@ -151,7 +151,7 @@ def process_email_account(email, password, output_dir, proxy_list=None, user_age
 
 
     if not proxy_success:
-        print("所有代理都连接失败，使用无代理模式")
+        # print("所有代理都连接失败，使用无代理模式")
         # 重新创建Chrome选项，不包含代理设置
         chrome_options = Options()
         chrome_options.add_argument("--lang=zh-CN")
