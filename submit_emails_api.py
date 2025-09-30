@@ -43,15 +43,12 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
                 )
             if crawl_type == 'auto' or crawl_type is None:
                 print("使用自动模式爬取邮件")
-                try:
-                    # 先尝试协议模式
-                    print("自动模式: 尝试协议模式爬取")
-                    total_emails, total_size = async_claude_process(task_id, email_accounts, 2)
-                    # 检查是否成功爬取到邮件
-                    if total_emails == 0:
-                        print("自动模式: 协议模式未爬取到邮件，尝试默认模式")
-                        raise Exception("协议模式未爬取到邮件")
-                except Exception as e:
+                # 先尝试协议模式
+                print("自动模式: 尝试协议模式爬取")
+                total_emails, total_size = async_claude_process(task_id, email_accounts, 2)
+                # 检查是否成功爬取到邮件
+                if total_emails == 0:
+                    print("自动模式: 协议模式未爬取到邮件，尝试默认模式")
                     # 协议模式失败，尝试默认模式
                     print(f"自动模式: 协议模式失败 ({str(e)}), 切换到默认模式")
                     total_emails, total_size = process_email_accounts(
@@ -60,6 +57,11 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
                         proxy_list=proxy_list,
                         user_agent_list=user_agent_list
                     )
+                if total_emails == 0:
+                    print("自动模式: 默认模式也未爬取到邮件，任务失败")
+                    # cookie 模式
+                    print("自动模式: 尝试 cookie 模式爬取")
+                    total_emails, total_size = cookie_crawl.fetch_all_emails_by_cookie(task_id, email_accounts)
             print("任务完成, 总邮件数:", total_emails, "总大小:", total_size)
             error = None
             if total_emails == 0:
