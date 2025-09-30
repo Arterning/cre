@@ -33,7 +33,7 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
             if crawl_type == 'protocol':
                 print("使用协议模式爬取邮件")
                 total_emails, total_size = async_claude_process(task_id, email_accounts, 2)
-            if crawl_type == 'default' or crawl_type is None:
+            if crawl_type == 'default':
                 print("使用默认模式爬取邮件")
                 total_emails, total_size = process_email_accounts(
                     task_id,
@@ -41,7 +41,7 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
                     proxy_list=proxy_list,
                     user_agent_list=user_agent_list
                 )
-            if crawl_type == 'auto':
+            if crawl_type == 'auto' or crawl_type is None:
                 print("使用自动模式爬取邮件")
                 try:
                     # 先尝试协议模式
