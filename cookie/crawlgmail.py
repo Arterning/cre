@@ -5,23 +5,9 @@ import sys
 import os
 from datetime import datetime, timedelta
 from convert import convert_cookies_to_netscape, convert_to_netscape
-from utils import zip_email_files
+from utils import zip_email_files, run_command
 # 导入迁移到模板文件中的函数
 from ai.templates.cookie_downloader_gmail import download_gmail_emails, run_command
-
-
-# 已从cookie_downloader_gmail.py导入run_command方法，保留此注释以表明方法已迁移
-# def run_command(command):
-#     try:
-#         # 执行命令，捕获输出
-#         result = subprocess.run(command, shell=True, capture_output=True, text=True)
-#         return {
-#             "stdout": result.stdout.strip(),
-#             "stderr": result.stderr.strip(),
-#             "returncode": result.returncode
-#         }
-#     except subprocess.SubprocessError as e:
-#         print(f"命令执行失败：{e}")
 
 
 def list_gmails(cookies):

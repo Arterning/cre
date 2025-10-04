@@ -1,6 +1,23 @@
 import os
 import zipfile
 import shutil
+import subprocess
+import time
+import sys
+
+
+# 示例 1：执行简单命令并获取输出
+def run_command(command):
+    try:
+        # 执行命令，捕获输出
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        return {
+            "stdout": result.stdout.strip(),
+            "stderr": result.stderr.strip(),
+            "returncode": result.returncode
+        }
+    except subprocess.SubprocessError as e:
+        print(f"命令执行失败：{e}")
 
 
 def zip_email_files(email, output_dir):

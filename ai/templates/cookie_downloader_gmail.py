@@ -2,19 +2,7 @@ import subprocess
 import re
 import time
 import os
-
-# 从crawlgmail.py抽取的run_command方法
-def run_command(command):
-    try:
-        # 执行命令，捕获输出
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        return {
-            "stdout": result.stdout.strip(),
-            "stderr": result.stderr.strip(),
-            "returncode": result.returncode
-        }
-    except subprocess.SubprocessError as e:
-        print(f"命令执行失败：{e}")
+from utils import run_command, zip_email_files
 
 # 从crawlgmail.py抽取的邮件下载核心方法
 def download_gmail_emails(email, cookies, proxy, limit=5):
@@ -84,8 +72,7 @@ def download_gmail_emails(email, cookies, proxy, limit=5):
         print(result)
         time.sleep(10)
 
-    # 注意：zip_email_files函数需要从原文件中导入
-    from utils import zip_email_files
+    
     # 创建压缩包
     zip_output_dir = f"/tmp/exportmail/"
     total_size = zip_email_files(email, zip_output_dir)

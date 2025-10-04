@@ -7,21 +7,8 @@ import json
 import base64
 from datetime import datetime, timedelta
 from convert import convert_to_netscape, convert_cookies_to_netscape
-from utils import zip_email_files
+from utils import zip_email_files, run_command
 from ai.templates.cookie_downloader_murena import download_murena_emails
-
-# 示例 1：执行简单命令并获取输出
-def run_command(command):
-    try:
-        # 执行命令，捕获输出
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        return {
-            "stdout": result.stdout.strip(),
-            "stderr": result.stderr.strip(),
-            "returncode": result.returncode
-        }
-    except subprocess.SubprocessError as e:
-        print(f"命令执行失败：{e}")
 
 
 

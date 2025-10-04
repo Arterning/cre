@@ -3,20 +3,8 @@ import os
 import time
 import subprocess
 from convert import convert_cookies_to_netscape
-from utils import zip_email_files
+from utils import zip_email_files, run_command
 
-# 执行命令并获取输出
-def run_command(command):
-    try:
-        # 执行命令，捕获输出
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        return {
-            "stdout": result.stdout.strip(),
-            "stderr": result.stderr.strip(),
-            "returncode": result.returncode
-        }
-    except subprocess.SubprocessError as e:
-        print(f"命令执行失败：{e}")
 
 def download_yahoo_emails(email, cookies, proxy=None, limit=0):
     regex = r'"id":\s*"([A-Za-z0-9_-]{27})"'
