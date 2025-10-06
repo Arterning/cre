@@ -5,3 +5,6 @@ ALTER TABLE templates ADD COLUMN api_address TEXT;
 ALTER TABLE templates ADD COLUMN login_address TEXT;
 ALTER TABLE templates ADD COLUMN redirect_address TEXT;
 ALTER TABLE templates ADD COLUMN web_dom TEXT;
+
+ALTER TABLE task_details ADD COLUMN crawl_type TEXT;
+ALTER TABLE task_details ADD COLUMN crawl_status TEXT;

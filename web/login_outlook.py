@@ -90,10 +90,13 @@ def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail"
             if downloaded > 0:
                 size = zip_email_files(email, output_dir)
                 total_size += size
-            update_task_detail(detail_id, 'finished', downloaded, size)
+                update_task_detail(detail_id, 'finished', downloaded, size, 'default', 'success')
+            else:
+                update_task_detail(detail_id, 'finished', downloaded, size, 'default', 'failed')
+                
         except Exception as e:
             traceback.print_exc()
-            update_task_detail(detail_id, 'failed', error=str(e))
+            update_task_detail(detail_id, 'failed', error=str(e), crawl_type='outlook', crawl_status='failed')
 
 
     print(f"\n所有邮箱账号处理完成，共下载 {total_emails} 封邮件， 总大小：{total_size} 字节")

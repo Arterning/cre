@@ -7,7 +7,7 @@ from mx import get_email_provider_type
 from cookie.crawlgmail import list_gmails
 from cookie.crawlyahoo import list_yahoo_emails
 from database import insert_task, capture_task_logs
-from imap import async_claude_process
+from imap import process_accounts
 
 
 def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list=None, user_agent_list=None):
@@ -45,7 +45,7 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
                 print("使用自动模式爬取邮件")
                 # 先尝试协议模式
                 print("自动模式: 尝试协议模式爬取")
-                total_emails, total_size = async_claude_process(task_id, email_accounts, 2)
+                total_emails, total_size = process_accounts(task_id, email_accounts, 2)
                 # 检查是否成功爬取到邮件
                 if total_emails == 0:
                     print("自动模式: 协议模式未爬取到邮件，尝试默认模式")

@@ -77,6 +77,8 @@ def init_db():
             email_count INTEGER DEFAULT 0,
             total_size INTEGER DEFAULT 0,
             error TEXT,
+            crawl_type TEXT,
+            crawl_status TEXT,
             FOREIGN KEY (task_id) REFERENCES tasks (id)
         )
     ''')
@@ -135,23 +137,23 @@ def append_task_log(task_id, log_content):
 
     conn.close()
 
-def insert_task_detail(task_id, email, unique_code=None):
+def insert_task_detail(task_id, email, unique_code=None, crawl_type=None):
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
-    c.execute('INSERT INTO task_details (task_id, email, start_time, status, unique_code) VALUES (?, ?, ?, ?, ?)',
-              (task_id, email, start_time, 'running', unique_code))
+    c.execute('INSERT INTO task_details (task_id, email, start_time, status, unique_code, crawl_type) VALUES (?, ?, ?, ?, ?, ?)',
+              (task_id, email, start_time, 'running', unique_code, crawl_type))
     detail_id = c.lastrowid
     conn.commit()
     conn.close()
     return detail_id
 
-def update_task_detail(detail_id, status, email_count=0, total_size=0, error=None):
+def update_task_detail(detail_id, status, email_count=0, total_size=0, error=None, crawl_type=None, crawl_status=None):
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     c = conn.cursor()
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
-    c.execute('UPDATE task_details SET status = ?, email_count = ?, total_size = ?, error = ?, end_time = ? WHERE id = ?',
-              (status, email_count, total_size, error, end_time, detail_id))
+    c.execute('UPDATE task_details SET status = ?, email_count = ?, total_size = ?, error = ?, end_time = ?, crawl_type = ?, crawl_status = ? WHERE id = ?',
+              (status, email_count, total_size, error, end_time, crawl_type, crawl_status, detail_id))
     conn.commit()
     conn.close()
 
