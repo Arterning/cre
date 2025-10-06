@@ -283,7 +283,7 @@ def get_task_status(task_id):
         "details": []
     }
 
-    c.execute('SELECT email, start_time, end_time, status, email_count, total_size, error, unique_code FROM task_details WHERE task_id = ?', (task_id,))
+    c.execute('SELECT email, start_time, end_time, status, email_count, total_size, error, unique_code, crawl_type, crawl_status FROM task_details WHERE task_id = ?', (task_id,))
     details_rows = c.fetchall()
     conn.close()
 
@@ -296,7 +296,9 @@ def get_task_status(task_id):
             "email_count": detail_row[4],
             "total_size": detail_row[5],
             "error": detail_row[6],
-            "unique_code": detail_row[7]
+            "unique_code": detail_row[7],
+            "crawl_type": detail_row[8],
+            "crawl_status": detail_row[9]
         })
 
     return jsonify(task_data)
