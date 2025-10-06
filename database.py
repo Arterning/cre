@@ -237,7 +237,8 @@ def get_task_details(task_id):
     c = conn.cursor()
     
     c.execute('''
-        SELECT id, email, start_time, end_time, status, email_count, total_size, error
+        SELECT id, email, start_time, end_time, status, email_count, total_size, error,
+        crawl_type, crawl_status
         FROM task_details 
         WHERE task_id = ? 
         ORDER BY start_time DESC
@@ -253,7 +254,9 @@ def get_task_details(task_id):
             'status': row[4],
             'email_count': row[5],
             'total_size': row[6],
-            'error': row[7]
+            'error': row[7],
+            'crawl_type': row[8],
+            'crawl_status': row[9]
         })
     
     conn.close()
