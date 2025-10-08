@@ -39,7 +39,17 @@ def process_email_account(task_id, email_account, output_dir, proxy_list=None, u
     else:
         # 暂不支持其他邮箱类型
         downloaded = 0
-    return downloaded
+    
+    if downloaded > 0:
+        size = zip_email_files(email, output_dir)
+        update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'success')
+    else:
+        update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'failed')
+        
+    except Exception as e:
+        traceback.print_exc()
+        update_task_detail(detail_id, 'failed', error=str(e), crawl_type='outlook', crawl_status='failed')
+    return downloaded, size
     
 
 def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail", proxy_list=None, user_agent_list=None):
@@ -50,21 +60,9 @@ def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail"
 
     for account in email_accounts:
         try:
-            downloaded = process_email_account(task_id, account, output_dir, proxy_list, user_agent_list)
+            downloaded, size = process_email_account(task_id, account, output_dir, proxy_list, user_agent_list)
             total_emails += downloaded
-
-            size = 0
-            if downloaded > 0:
-                size = zip_email_files(email, output_dir)
-                total_size += size
-                update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'success')
-            else:
-                update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'failed')
-                
-        except Exception as e:
-            traceback.print_exc()
-            update_task_detail(detail_id, 'failed', error=str(e), crawl_type='outlook', crawl_status='failed')
-
+            total_size += size
 
     print(f"\n所有邮箱账号处理完成，共下载 {total_emails} 封邮件， 总大小：{total_size} 字节")
     return total_emails, total_size
