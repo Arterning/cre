@@ -9,7 +9,7 @@ from cookie.crawlyahoo import list_yahoo_emails
 from database import insert_task, capture_task_logs
 from imap import process_accounts, process_single_account
 from web.login import process_email_accounts, process_email_account
-from cookie import fetch_all_emails_by_cookie, fetch_single_account_by_cookie
+from cookie.cookie_crawl import fetch_all_emails_by_cookie, fetch_single_account_by_cookie
 from api import token_crawl
 import traceback
 from database import update_task_status
