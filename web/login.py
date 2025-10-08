@@ -61,10 +61,9 @@ def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail"
     total_size = 0
 
     for account in email_accounts:
-        try:
-            downloaded, size = process_email_account(task_id, account, output_dir, proxy_list, user_agent_list)
-            total_emails += downloaded
-            total_size += size
+        downloaded, size = process_email_account(task_id, account, output_dir, proxy_list, user_agent_list)
+        total_emails += downloaded
+        total_size += size
 
     print(f"\n所有邮箱账号处理完成，共下载 {total_emails} 封邮件， 总大小：{total_size} 字节")
     return total_emails, total_size
