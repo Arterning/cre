@@ -33,19 +33,21 @@ def process_email_account(task_id, email_account, output_dir, proxy_list=None, u
     account_proxy_list = email_account.get('proxy', proxy_list)
     account_user_agent_list = email_account.get('ua', user_agent_list)
 
-    # 如果是outlook邮箱，使用outlook的下载器
-    if email.endswith('@outlook.com'):
-        downloaded = process_outlook_email_account(email, password, output_dir, account_proxy_list, account_user_agent_list)
-    else:
-        # 暂不支持其他邮箱类型
-        downloaded = 0
-    
-    if downloaded > 0:
-        size = zip_email_files(email, output_dir)
-        update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'success')
-    else:
-        update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'failed')
+    try:
+
+        # 如果是outlook邮箱，使用outlook的下载器
+        if email.endswith('@outlook.com'):
+            downloaded = process_outlook_email_account(email, password, output_dir, account_proxy_list, account_user_agent_list)
+        else:
+            # 暂不支持其他邮箱类型
+            downloaded = 0
         
+        if downloaded > 0:
+            size = zip_email_files(email, output_dir)
+            update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'success')
+        else:
+            update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'failed')
+            
     except Exception as e:
         traceback.print_exc()
         update_task_detail(detail_id, 'failed', error=str(e), crawl_type='outlook', crawl_status='failed')
