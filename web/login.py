@@ -22,7 +22,7 @@ from utils import zip_email_files, create_directory
 
 
 # 处理单个账号
-def process_email_account(task_id, email_account, output_dir, proxy_list=None, user_agent_list=None):
+def process_email_account(task_id, email_account, output_dir="/tmp/exportmail", proxy_list=None, user_agent_list=None):
     """处理单个邮箱账号"""
     email = email_account['email']
     password = email_account['password']
