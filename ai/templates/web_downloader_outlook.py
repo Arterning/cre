@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from utils import create_directory
+from utils import  create_account_dir
 
 
 def test_proxy(proxy, chrome_options):
@@ -366,8 +366,3 @@ def process_outlook_email_account(email, password, proxy_list=None, user_agent_l
     finally:
         driver.quit()
 
-
-# 辅助函数：创建目录
-def create_directory(directory_path):
-    if not os.path.exists(directory_path):
-        os.makedirs(directory_path)
