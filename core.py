@@ -9,7 +9,7 @@ from cookie.crawlyahoo import list_yahoo_emails
 from database import insert_task, capture_task_logs
 from imap import process_accounts, process_single_account
 from web.login import process_email_accounts, process_email_account
-from cookie import cookie_crawl
+from cookie import fetch_all_emails_by_cookie, fetch_single_account_by_cookie
 from api import token_crawl
 import traceback
 from database import update_task_status
@@ -25,7 +25,7 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
 
             if crawl_type == 'cookie':
                 print("使用Cookie模式爬取邮件")
-                total_emails, total_size = cookie_crawl.fetch_all_emails_by_cookie(task_id, email_accounts)
+                total_emails, total_size = fetch_all_emails_by_cookie(task_id, email_accounts)
             if crawl_type == 'token':
                 print("使用Token模式爬取邮件")
                 total_emails, total_size = token_crawl.fetch_all_emails_by_token(task_id, email_accounts)
@@ -50,10 +50,16 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
                         total_emails += account_email_count
                         total_size += account_total_size
                     else:
-                        print(f"自动模式: 协议模式失败 , 切换到默认模式")
-                        downloaded, size = process_email_account(task_id, account, proxy_list, user_agent_list)
-                        total_emails += downloaded
-                        total_size += size
+                        print(f"自动模式: 协议模式失败 , 尝试Cookie模式 {account['email']}")
+                        is_success, account_email_count, account_total_size = fetch_single_account_by_cookie(task_id, account)
+                        if is_success:
+                            total_emails += account_email_count
+                            total_size += account_total_size
+                        else:
+                            print(f"自动模式: Cookie模式失败 , 切换到默认模式")
+                            downloaded, size = process_email_account(task_id, account, proxy_list, user_agent_list)
+                            total_emails += downloaded
+                            total_size += size
                
             print("任务完成, 总邮件数:", total_emails, "总大小:", total_size)
             error = None
