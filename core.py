@@ -51,7 +51,9 @@ def async_process(task_id, crawl_type, email_accounts, email_cookies, proxy_list
                         total_size += account_total_size
                     else:
                         print(f"自动模式: 协议模式失败 , 切换到默认模式")
-                        process_email_account(task_id, account, proxy_list, user_agent_list)
+                        downloaded, size = process_email_account(task_id, account, proxy_list, user_agent_list)
+                        total_emails += downloaded
+                        total_size += size
                
             print("任务完成, 总邮件数:", total_emails, "总大小:", total_size)
             error = None

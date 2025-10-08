@@ -48,11 +48,11 @@ def process_email_account(task_id, email_account, proxy_list=None, user_agent_li
             size = zip_email_files(email, output_dir)
             update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'success')
         else:
-            update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'failed')
+            update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'login failed')
             
     except Exception as e:
         traceback.print_exc()
-        update_task_detail(detail_id, 'failed', error=str(e), crawl_type='outlook', crawl_status='failed')
+        update_task_detail(detail_id, 'failed', error=str(e), crawl_type='outlook', crawl_status='login failed')
     return downloaded, size
     
 

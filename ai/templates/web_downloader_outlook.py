@@ -364,8 +364,7 @@ def process_outlook_email_account(email, password, proxy_list=None, user_agent_l
             
         traceback.print_exc()
 
-        random_number = random.randint(5, 10)
-        return random_number
+        return 0
     finally:
         driver.quit()
 
