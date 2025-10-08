@@ -74,7 +74,6 @@ def download_gmail_emails(email, cookies, proxy, limit=5):
 
     
     # 创建压缩包
-    zip_output_dir = f"/tmp/exportmail/"
-    total_size = zip_email_files(email, zip_output_dir)
+    total_size = zip_email_files(email)
     total_emails = len(matches)
     return total_size, total_emails

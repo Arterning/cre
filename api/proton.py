@@ -145,9 +145,7 @@ def download_emails(email_address: str = "demo@proton.com", params: dict = {}, p
                         total_emails += 1
                     print(f"Saved message to {output_file}")
     
-    # 创建压缩包
-    zip_output_dir = f"/tmp/exportmail/"
-    total_size = zip_email_files(email_address, zip_output_dir)
+    total_size = zip_email_files(email_address)
     return total_size, total_emails
 
 

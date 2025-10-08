@@ -73,6 +73,5 @@ def download_yahoo_emails(email, cookies, proxy=None, limit=0):
         time.sleep(10)
     
     # 创建压缩包
-    zip_output_dir = f"/tmp/exportmail/"
-    total_size = zip_email_files(email, zip_output_dir)
+    total_size = zip_email_files(email)
     return total_size, total_emails

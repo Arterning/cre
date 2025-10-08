@@ -115,8 +115,7 @@ def download_murena_emails(email, cookies, proxy=None, limit=0):
         time.sleep(10)
 
     # 创建压缩包
-    zip_output_dir = f"/tmp/exportmail/"
-    total_size = zip_email_files(email, zip_output_dir)
+    total_size = zip_email_files(email)
     total_emails = max_emails
     print(f"已导出 {total_emails} 封邮件，压缩包大小为 {total_size} 字节。")
     return total_size, total_emails

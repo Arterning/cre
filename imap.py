@@ -89,7 +89,7 @@ def process_single_account(task_id, account, max_attempts):
                     shutil.copytree(user_email_dir, temp_account_dir, dirs_exist_ok=True)
                     
                     # Zip the email files
-                    zip_size = zip_email_files(username, export_dir)
+                    zip_size = zip_email_files(username)
                     
                     # Clean up temp directory
                     if os.path.exists(temp_account_dir):
@@ -117,11 +117,12 @@ def process_single_account(task_id, account, max_attempts):
             account_total_size = 0
         
         # Update task detail with actual email count and size
-        update_task_detail(detail_id, 'finished', account_email_count, account_total_size, None, 'imap', 'success')
         if account_email_count > 0:
             is_success = True
+            update_task_detail(detail_id, 'finished', account_email_count, account_total_size, None, 'imap', 'success')
         else:
             is_success = False
+            update_task_detail(detail_id, 'failed', 0, 0, None, 'imap', 'failed')
             
     except Exception as e:
         traceback.print_exc()
