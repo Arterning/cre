@@ -118,7 +118,10 @@ def process_single_account(task_id, account, max_attempts):
         
         # Update task detail with actual email count and size
         update_task_detail(detail_id, 'finished', account_email_count, account_total_size, None, 'imap', 'success')
-        is_success = True
+        if account_email_count > 0:
+            is_success = True
+        else:
+            is_success = False
             
     except Exception as e:
         traceback.print_exc()
