@@ -50,7 +50,7 @@ def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail"
 
     for account in email_accounts:
         try:
-            downloaded = process_email_account(task_id, account, output_dir, account_proxy_list, account_user_agent_list)
+            downloaded = process_email_account(task_id, account, output_dir, proxy_list, user_agent_list)
             total_emails += downloaded
 
             size = 0
