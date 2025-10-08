@@ -3,7 +3,7 @@ import os
 import time
 import subprocess
 from convert import convert_cookies_to_netscape
-from utils import zip_email_files, run_command
+from utils import zip_email_files, run_command, create_account_dir
 
 
 def download_yahoo_emails(email, cookies, proxy=None, limit=0):
@@ -46,8 +46,7 @@ def download_yahoo_emails(email, cookies, proxy=None, limit=0):
         matches = matches[:limit]
         print(f"限制处理数量为 {limit} 封邮件")
     
-    account_name = email.replace('@', '_')
-    output_dir = f"/tmp/exportmail/{account_name}/"
+    output_dir = create_account_dir(email)
     total_emails = len(matches)
 
     result_file = f'{account_name}_result.txt'

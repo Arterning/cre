@@ -5,7 +5,7 @@ import json
 import base64
 import subprocess
 from convert import convert_cookies_to_netscape
-from utils import zip_email_files, run_command
+from utils import zip_email_files, run_command, create_account_dir
 
 
 def download_murena_emails(email, cookies, proxy=None, limit=0):
@@ -90,10 +90,7 @@ def download_murena_emails(email, cookies, proxy=None, limit=0):
         max_emails = limit
         print(f"限制处理数量为 {limit} 封邮件")
 
-    account_name = email.replace('@', '_')
-    output_dir = f"/tmp/exportmail/{account_name}/"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    output_dir = create_account_dir(email)
     print("输出目录为：", output_dir)
     for i in range(max_emails):
         print("正在收取第{}封邮件".format(i+1))

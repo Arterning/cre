@@ -2,7 +2,7 @@ import subprocess
 import re
 import time
 import os
-from utils import run_command, zip_email_files
+from utils import run_command, zip_email_files, create_account_dir
 
 # 从crawlgmail.py抽取的邮件下载核心方法
 def download_gmail_emails(email, cookies, proxy, limit=5):
@@ -45,14 +45,13 @@ def download_gmail_emails(email, cookies, proxy, limit=5):
         matches = matches[:limit]
         print(f"限制处理数量为 {limit} 封邮件")
     
-    account_name = email.replace('@', '_')
+    output_dir = create_account_dir(email)
     
     result_file = f'{account_name}_result.txt'
     with open(result_file, 'w') as f:
         f.write(result["stdout"])
     print(f"结果已保存到 {result_file}")
 
-    output_dir = f"/tmp/exportmail/{account_name}/"
 
     if not matches:
         print("没有找到邮件")
