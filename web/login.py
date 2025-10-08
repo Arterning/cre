@@ -33,6 +33,8 @@ def process_email_account(task_id, email_account, output_dir, proxy_list=None, u
     account_proxy_list = email_account.get('proxy', proxy_list)
     account_user_agent_list = email_account.get('ua', user_agent_list)
 
+    downloaded = 0
+    size = 0
     try:
 
         # 如果是outlook邮箱，使用outlook的下载器
