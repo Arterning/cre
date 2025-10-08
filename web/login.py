@@ -45,7 +45,7 @@ def process_email_account(task_id, email_account, proxy_list=None, user_agent_li
             downloaded = 0
         
         if downloaded > 0:
-            size = zip_email_files(email, output_dir)
+            size = zip_email_files(email)
             update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'login success')
         else:
             update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'login failed')
@@ -58,7 +58,7 @@ def process_email_account(task_id, email_account, proxy_list=None, user_agent_li
 
 def process_email_accounts(task_id, email_accounts, proxy_list=None, user_agent_list=None):
     """处理多个邮箱账号"""
-    create_directory(output_dir)
+    create_directory("/tmp/exportmail")
     total_emails = 0
     total_size = 0
 
@@ -95,7 +95,6 @@ if __name__ == "__main__":
     total_emails, total_size = process_email_accounts(
         1,
         email_accounts,
-        output_dir=args.output,
         proxy_list=args.proxy.split(',') if args.proxy else None,
         user_agent_list=args.ua.split(',') if args.ua else None
     )
