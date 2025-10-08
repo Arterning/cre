@@ -46,7 +46,7 @@ def process_email_account(task_id, email_account, proxy_list=None, user_agent_li
         
         if downloaded > 0:
             size = zip_email_files(email, output_dir)
-            update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'success')
+            update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'login success')
         else:
             update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'login failed')
             
