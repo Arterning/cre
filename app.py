@@ -486,9 +486,6 @@ def download_file():
         account_dir = os.path.join(output_dir, account_name)
         file_path = os.path.join(output_dir, f"{email.replace('@', '_')}.zip")
 
-    # 拼接文件路径
-    #safe_email = email.replace("/", dd"_")  # 简单防止路径注入
-    #file_path = f"/tmp/exportmail/{safe_email}.zip"
 
     print("file_path", file_path)
      

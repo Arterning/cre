@@ -25,9 +25,18 @@ def run_command(command):
         print(f"命令执行失败：{e}")
 
 
+output_dir = "/tmp/exportmail"
+
+def create_account_dir(email):
+    """创建账号目录"""
+    account_name = email.replace('@', '_')
+    account_dir = os.path.join(output_dir, account_name)
+    create_directory(account_dir)
+    return account_dir
+
+
 def zip_email_files(email):
     """将下载的eml文件按邮箱名称打包为zip，并返回打包前文件的总大小（字节）"""
-    output_dir = "/tmp/exportmail"
     account_name = email.replace('@', '_')
     account_dir = os.path.join(output_dir, account_name)
     zip_filename = os.path.join(output_dir, f"{email.replace('@', '_')}.zip")

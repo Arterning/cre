@@ -55,7 +55,7 @@ if __name__ == "__main__":
     for msg in matches:
         print(msg)
         #url = f"https://mail.yahoo.com/ws/v3/mailboxes/@/messages/@.id=={msg}/content/rawplaintext"
-        output_file = f"/tmp/exportmail/output_{msg}.eml"
+        output_file = f"/tmp/mail/output_{msg}.eml"
         cmd=f"curl --proxy http://172.17.120.142:7890  -o {output_file} --cookie netscape-cookies.txt 'https://mail.yahoo.com/ws/v3/mailboxes/@/messages/@.id=={msg}/content/rawplaintext'"
         result =run_command(cmd)
         #regex_file = r"curl: Saved to filename '([^']+)'"

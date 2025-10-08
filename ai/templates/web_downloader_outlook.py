@@ -7,6 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from utils import create_directory
 
 
 def test_proxy(proxy, chrome_options):
@@ -68,10 +69,7 @@ def test_proxy(proxy, chrome_options):
 
 def process_outlook_email_account(email, password, proxy_list=None, user_agent_list=None):
     """处理单个邮箱账号的邮件下载"""
-    output_dir = "/tmp/exportmail"
-    account_name = email.split('@')[0]
-    account_dir = os.path.join(output_dir, account_name)
-    create_directory(account_dir)
+    account_dir = create_account_dir(email)
 
     # 随机选择一个用户代理
     if user_agent_list and isinstance(user_agent_list, list):
