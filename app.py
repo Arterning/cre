@@ -22,8 +22,7 @@ from ai import claude_client
 from utils import zip_email_files
 from dotenv import load_dotenv
 from functools import wraps
-from submit_emails_api import submit_emails
-from submit_emails_api import async_process
+from core import async_process
 from template_routes import register_template_routes
 
 load_dotenv()
@@ -239,7 +238,80 @@ def validate_cookies():
 
 @app.route('/submit_emails', methods=['POST'])
 def submit_emails_route():
-    return submit_emails()
+    data = request.get_json()
+
+    # if not data or 'email_accounts' not in data:
+    #     return jsonify({"error": "Missing 'email_accounts' parameter"}), 400
+
+    email_accounts = data.get('email_accounts', [])
+    crawl_type = data.get('crawl_type', 'default')
+
+    for account in email_accounts:
+        if 'email' not in account and 'password' not in account:
+            return jsonify({"error": "Each account must include 'email' and 'password'"}), 400
+        
+
+    # 提取全局代理和用户代理设置
+    proxy_list = None
+    user_agent_list = None
+    
+    # 检查是否有全局设置
+    if 'proxy_list' in data:
+        proxy_list = data['proxy_list']
+    elif 'proxy' in data:
+        proxy_list = [data['proxy']] if data['proxy'] else None
+        
+    if 'user_agent_list' in data:
+        user_agent_list = data['user_agent_list']
+    elif 'user_agent' in data:
+        user_agent_list = [data['user_agent']] if data['user_agent'] else None
+
+    # 创建任务记录并获取任务 ID
+    task_id = insert_task(crawl_type)
+
+    # 启动后台线程处理任务
+    thread = threading.Thread(target=async_process, args=(
+        task_id, 
+        crawl_type, 
+        email_accounts,
+        proxy_list, 
+        user_agent_list
+        ))
+    thread.start()
+
+    if crawl_type == 'cookie':
+        response = []    
+        for email in email_accounts:
+            mails = 0
+            email_address = email['email']
+            try :
+                params = email.get('params', {})
+                cookie = params.get('cookie', None)
+                cookies = decode_base64(cookie)
+            except Exception as e:
+                print(f"Failed to decode cookies for {email_address}: {e}")
+                response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
+                continue  # 如果解码失败，跳过这个邮箱
+            
+            provider = get_email_provider_type(email_address)
+
+            if "Google Mail" in provider or "Gmail" in provider:
+                mails = list_gmails(cookies)
+            elif "Yahoo Mail" in provider or "Yahoo" in provider:
+                mails = list_yahoo_emails(cookies)
+            elif "Murena Mail" in provider or "Murena" in provider:
+                mails = 1
+            else:
+                raise ValueError(f"Unsupported email domain for {email}. Only Gmail and Yahoo are supported.")
+            
+            if mails > 0:
+                response.append({"email": email_address, "status": "valid"})
+            else:
+                response.append({"email": email_address, "status": "invalid", "error_message": "cookie 验证不通过"})
+
+        return jsonify({"status": "submitted", "task_id": task_id, "emails": response})
+
+    return jsonify({"status": "submitted", "task_id": task_id})
 
 
 @app.route('/task_status/<task_id>', methods=['GET'])

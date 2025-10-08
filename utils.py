@@ -5,6 +5,11 @@ import subprocess
 import time
 import sys
 
+def create_directory(path):
+    """创建目录，如果目录不存在"""
+    if not os.path.exists(path):
+        os.makedirs(path)
+
 
 # 示例 1：执行简单命令并获取输出
 def run_command(command):

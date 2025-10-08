@@ -17,54 +17,30 @@ import argparse
 from datetime import datetime
 import random
 from database import insert_task_detail, update_task_detail
-from ai.templates.web_downloader_outlook import process_email_account
+from ai.templates.web_downloader_outlook import process_outlook_email_account
+from utils import zip_email_files, create_directory
 
 
-def create_directory(path):
-    """创建目录，如果目录不存在"""
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-
-# process_email_account方法已移至ai/templates/web_downloader_outlook.py
-
-
-def zip_email_files(email, output_dir):
-    """将下载的eml文件按邮箱名称打包为zip，并返回打包前文件的总大小（字节）"""
-    account_name = email.split('@')[0]
-    account_dir = os.path.join(output_dir, account_name)
-    zip_filename = os.path.join(output_dir, f"{email.replace('@', '_')}.zip")
-
-    if not os.path.exists(account_dir):
-        print(f"没有找到 {email} 的邮件目录")
-        return 0
-
-    # 计算打包前所有文件的总大小（单位：字节）
-    total_size = 0
-    for root, _, files in os.walk(account_dir):
-        for file in files:
-            file_path = os.path.join(root, file)
-            total_size += os.path.getsize(file_path)
+# 处理单个账号
+def process_email_account(task_id, email_account, output_dir, proxy_list=None, user_agent_list=None):
+    """处理单个邮箱账号"""
+    email = email_account['email']
+    password = email_account['password']
+    unique_code = email_account.get('unique_code')
+    detail_id = insert_task_detail(task_id, email, unique_code)
     
-    if total_size == 0:
-        print(f"没有找到 {email} 的邮件文件， 无法打包")
-        return 20480
+    # 获取账号特定的代理和用户代理设置，如果没有则使用全局设置
+    account_proxy_list = email_account.get('proxy', proxy_list)
+    account_user_agent_list = email_account.get('ua', user_agent_list)
 
-    print(f"正在将 {email} 的邮件打包为 zip 文件...")
-
-    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, _, files in os.walk(account_dir):
-            for file in files:
-                file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, account_dir)
-                zipf.write(file_path, arcname)
-
-    # 清理临时目录
-    shutil.rmtree(account_dir)
-    print(f"已完成 {email} 的邮件打包: {zip_filename}，原始大小: {total_size} 字节")
-
-    return total_size
-
+    # 如果是outlook邮箱，使用outlook的下载器
+    if email.endswith('@outlook.com'):
+        downloaded = process_outlook_email_account(email, password, output_dir, account_proxy_list, account_user_agent_list)
+    else:
+        # 暂不支持其他邮箱类型
+        downloaded = 0
+    return downloaded
+    
 
 def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail", proxy_list=None, user_agent_list=None):
     """处理多个邮箱账号"""
@@ -73,26 +49,17 @@ def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail"
     total_size = 0
 
     for account in email_accounts:
-        email = account['email']
-        password = account['password']
-        unique_code = account.get('unique_code')
-        detail_id = insert_task_detail(task_id, email, unique_code)
-        
-        # 获取账号特定的代理和用户代理设置，如果没有则使用全局设置
-        account_proxy_list = account.get('proxy', proxy_list)
-        account_user_agent_list = account.get('ua', user_agent_list)
-
         try:
-            downloaded = process_email_account(email, password, output_dir, account_proxy_list, account_user_agent_list)
+            downloaded = process_email_account(task_id, account, output_dir, account_proxy_list, account_user_agent_list)
             total_emails += downloaded
 
             size = 0
             if downloaded > 0:
                 size = zip_email_files(email, output_dir)
                 total_size += size
-                update_task_detail(detail_id, 'finished', downloaded, size, 'default', 'success')
+                update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'success')
             else:
-                update_task_detail(detail_id, 'finished', downloaded, size, 'default', 'failed')
+                update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'failed')
                 
         except Exception as e:
             traceback.print_exc()
