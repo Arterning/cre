@@ -22,7 +22,7 @@ from utils import zip_email_files, create_directory
 
 
 # 处理单个账号
-def process_email_account(task_id, email_account, output_dir="/tmp/exportmail", proxy_list=None, user_agent_list=None):
+def process_email_account(task_id, email_account, proxy_list=None, user_agent_list=None):
     """处理单个邮箱账号"""
     email = email_account['email']
     password = email_account['password']
@@ -39,7 +39,7 @@ def process_email_account(task_id, email_account, output_dir="/tmp/exportmail", 
 
         # 如果是outlook邮箱，使用outlook的下载器
         if email.endswith('@outlook.com'):
-            downloaded = process_outlook_email_account(email, password, output_dir, account_proxy_list, account_user_agent_list)
+            downloaded = process_outlook_email_account(email, password, account_proxy_list, account_user_agent_list)
         else:
             # 暂不支持其他邮箱类型
             downloaded = 0
@@ -56,14 +56,14 @@ def process_email_account(task_id, email_account, output_dir="/tmp/exportmail", 
     return downloaded, size
     
 
-def process_email_accounts(task_id, email_accounts, output_dir="/tmp/exportmail", proxy_list=None, user_agent_list=None):
+def process_email_accounts(task_id, email_accounts, proxy_list=None, user_agent_list=None):
     """处理多个邮箱账号"""
     create_directory(output_dir)
     total_emails = 0
     total_size = 0
 
     for account in email_accounts:
-        downloaded, size = process_email_account(task_id, account, output_dir, proxy_list, user_agent_list)
+        downloaded, size = process_email_account(task_id, account, proxy_list, user_agent_list)
         total_emails += downloaded
         total_size += size
 

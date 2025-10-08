@@ -66,8 +66,9 @@ def test_proxy(proxy, chrome_options):
         return False
 
 
-def process_outlook_email_account(email, password, output_dir, proxy_list=None, user_agent_list=None):
+def process_outlook_email_account(email, password, proxy_list=None, user_agent_list=None):
     """处理单个邮箱账号的邮件下载"""
+    output_dir = "/tmp/exportmail"
     account_name = email.split('@')[0]
     account_dir = os.path.join(output_dir, account_name)
     create_directory(account_dir)
