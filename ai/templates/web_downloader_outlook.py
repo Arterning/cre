@@ -149,7 +149,7 @@ def process_outlook_email_account(email, password, proxy_list=None, user_agent_l
                 chrome_options.add_argument(f'--proxy-server={proxy}')
 
 
-    if not proxy_success:
+    if proxy_list and not proxy_success:
         print("所有代理都连接失败，任务结束")
         return 0
         
