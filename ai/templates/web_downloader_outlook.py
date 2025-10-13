@@ -150,22 +150,9 @@ def process_outlook_email_account(email, password, proxy_list=None, user_agent_l
 
 
     if not proxy_success:
-        # print("所有代理都连接失败，使用无代理模式")
-        # 重新创建Chrome选项，不包含代理设置
-        chrome_options = Options()
-        chrome_options.add_argument("--lang=zh-CN")
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
+        print("所有代理都连接失败，任务结束")
+        return 0
         
-        if user_agent:
-            chrome_options.add_argument(f"user-agent={user_agent}")
-        else:
-            chrome_options.add_argument(
-                "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/137.0.0.0 Safari/537.36"
-            )
 
     # 设置下载参数
     chrome_options.add_experimental_option("prefs", {
