@@ -53,9 +53,9 @@ def process_email_account(task_id, email_account, proxy_list=None, user_agent_li
                 status='finished', 
                 downloaded=downloaded, 
                 size=size, 
-                error='登录失败', 
-                'default', 
-                'login failed'
+                error='用户名或密码错误', 
+                crawl_type='default', 
+                crawl_status='login failed'
                 )
             
     except Exception as e:
