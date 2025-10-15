@@ -48,7 +48,15 @@ def process_email_account(task_id, email_account, proxy_list=None, user_agent_li
             size = zip_email_files(email)
             update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'login success')
         else:
-            update_task_detail(detail_id, 'finished', downloaded, size, None, 'default', 'login failed')
+            update_task_detail(
+                detail_id=detail_id, 
+                status='finished', 
+                downloaded=downloaded, 
+                size=size, 
+                error='登录失败', 
+                'default', 
+                'login failed'
+                )
             
     except Exception as e:
         traceback.print_exc()

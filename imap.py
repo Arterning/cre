@@ -122,7 +122,7 @@ def process_single_account(task_id, account, max_attempts):
             update_task_detail(detail_id, 'finished', account_email_count, account_total_size, None, 'imap', 'login success')
         else:
             is_success = False
-            update_task_detail(detail_id, 'failed', 0, 0, None, 'imap', 'login failed')
+            update_task_detail(detail_id, 'failed', 0, 0, '授权码无效', 'imap', 'login failed')
             
     except Exception as e:
         traceback.print_exc()
