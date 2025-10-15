@@ -51,8 +51,8 @@ def process_email_account(task_id, email_account, proxy_list=None, user_agent_li
             update_task_detail(
                 detail_id=detail_id, 
                 status='finished', 
-                downloaded=downloaded, 
-                size=size, 
+                email_count=downloaded, 
+                total_size=size, 
                 error='用户名或密码错误', 
                 crawl_type='default', 
                 crawl_status='login failed'
