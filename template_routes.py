@@ -87,6 +87,98 @@ def extract_template_fields_with_ai(template_code):
         return None, f"提取字段时出错: {str(e)}"
 
 
+def update_template_code_with_ai(template_code, fields):
+    """使用Claude AI根据新的字段更新模板代码"""
+    try:
+        # 获取API Key
+        args = argparse.Namespace(key_file=None)
+        api_key = load_api_key(args)
+
+        # 构建字段描述
+        fields_description = []
+        if fields.get('server_address'):
+            fields_description.append(f"- 服务器地址: {fields['server_address']}")
+        if fields.get('protocol_type'):
+            fields_description.append(f"- 协议类型: {fields['protocol_type']}")
+        if fields.get('port'):
+            fields_description.append(f"- 端口号: {fields['port']}")
+        if fields.get('type'):
+            fields_description.append(f"- 模板类型: {fields['type']}")
+        if fields.get('api_address'):
+            fields_description.append(f"- API地址: {fields['api_address']}")
+        if fields.get('login_address'):
+            fields_description.append(f"- 登录地址: {fields['login_address']}")
+        if fields.get('redirect_address'):
+            fields_description.append(f"- 重定向地址: {fields['redirect_address']}")
+
+        fields_text = "\n".join(fields_description) if fields_description else "无字段更新"
+
+        # 构建提示词
+        prompt = f"""请根据以下配置信息更新Python模板代码。
+
+原始代码：
+```python
+{template_code}
+```
+
+需要更新的配置信息：
+{fields_text}
+
+请根据上述配置信息更新代码中的相应部分。要求：
+1. 保持代码的整体结构和逻辑不变
+2. 只更新与配置信息相关的部分（如服务器地址、端口号、URL等）
+3. 如果是IMAP脚本，更新imap_server和port变量
+4. 如果是Web脚本，更新相关的URL配置
+5. 如果是API脚本，更新API endpoint
+6. 保持代码的可读性和注释
+7. 不要改变代码的编码声明、导入语句等基础结构
+8. 只返回完整的更新后的Python代码，使用```python代码块包裹
+9. 不要包含任何解释性文字，只输出代码
+
+请直接返回更新后的完整代码。"""
+
+        # 调用Claude API
+        response = one_shot_call(
+            api_key=api_key,
+            prompt=prompt,
+            model="claude-sonnet-4-20250514",
+            max_tokens=8000,
+            system=None,
+            api_url="https://api.anthropic.com/v1/messages",
+            timeout=60.0,
+            retries=2
+        )
+
+        if response.get("error"):
+            return None, f"API调用失败: {response.get('body', {}).get('message', 'Unknown error')}"
+
+        # 提取文本内容
+        body = response.get("body", {})
+        text = extract_text_from_body(body)
+
+        # 提取代码块
+        updated_code = text.strip()
+
+        # 移除markdown代码块标记
+        if updated_code.startswith("```python"):
+            updated_code = updated_code[9:]
+        elif updated_code.startswith("```"):
+            updated_code = updated_code[3:]
+
+        if updated_code.endswith("```"):
+            updated_code = updated_code[:-3]
+
+        updated_code = updated_code.strip()
+
+        if not updated_code:
+            return None, "AI返回的代码为空"
+
+        return updated_code, None
+
+    except Exception as e:
+        return None, f"更新模板代码时出错: {str(e)}"
+
+
 def init_templates_from_filesystem():
     """初始化函数：将文件系统中的模板导入到数据库中（如果数据库中不存在）"""
     try:
@@ -246,38 +338,74 @@ def register_template_routes(app, login_required, api_key_or_login_required):
             data = request.get_json()
             if not data:
                 return jsonify({'success': False, 'error': '缺少更新数据'}), 400
-            
+
             # 检查模板是否存在
             template = get_template_by_name(template_name)
             if not template:
                 return jsonify({'success': False, 'error': '模板不存在'}), 404
-            
-            # 更新文件内容（如果提供了）
+
+            templates_dir = os.path.join(os.getcwd(), 'ai', 'templates')
+            filepath = os.path.join(templates_dir, template['path'])
+
+            if not os.path.exists(filepath):
+                return jsonify({'success': False, 'error': '模板文件不存在'}), 404
+
+            # 检查是否需要同步到模板文件
+            sync_to_file = data.get('sync_to_file', False)
+
+            # 更新文件内容（如果直接提供了content）
             if 'content' in data:
-                templates_dir = os.path.join(os.getcwd(), 'ai', 'templates')
-                filepath = os.path.join(templates_dir, template['path'])
-                
-                if not os.path.exists(filepath):
-                    return jsonify({'success': False, 'error': '模板文件不存在'}), 404
-                
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write(data['content'])
-            
+            # 如果需要同步字段到文件，使用AI更新模板代码
+            elif sync_to_file:
+                # 收集需要更新的字段
+                fields_to_update = {}
+
+                if 'server_address' in data:
+                    fields_to_update['server_address'] = data['server_address']
+                if 'protocol_type' in data:
+                    fields_to_update['protocol_type'] = data['protocol_type']
+                if 'port' in data:
+                    fields_to_update['port'] = data['port']
+                if 'type' in data:
+                    fields_to_update['type'] = data['type']
+                if 'api_address' in data:
+                    fields_to_update['api_address'] = data['api_address']
+                if 'login_address' in data:
+                    fields_to_update['login_address'] = data['login_address']
+                if 'redirect_address' in data:
+                    fields_to_update['redirect_address'] = data['redirect_address']
+
+                if fields_to_update:
+                    # 读取当前模板代码
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        current_code = f.read()
+
+                    # 使用AI更新模板代码
+                    updated_code, error = update_template_code_with_ai(current_code, fields_to_update)
+
+                    if error:
+                        return jsonify({'success': False, 'error': f'AI更新模板失败: {error}'}), 500
+
+                    # 保存更新后的代码
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        f.write(updated_code)
+
             # 验证web_dom字段是否为有效的JSON格式（如果提供了）
             web_dom = data.get('web_dom')
             if web_dom:
-                import json
                 try:
                     web_dom_json = json.loads(web_dom)
                     # 检查是否包含必要的字段
                     if not isinstance(web_dom_json, dict):
                         return jsonify({'success': False, 'error': 'web_dom必须是JSON对象格式'}), 400
-                    
+
                     # 重新格式化JSON字符串，确保格式统一
                     web_dom = json.dumps(web_dom_json, ensure_ascii=False)
                 except json.JSONDecodeError:
                     return jsonify({'success': False, 'error': 'web_dom不是有效的JSON格式'}), 400
-            
+
             # 更新数据库记录
             update_template(
                 template_name,
@@ -291,9 +419,20 @@ def register_template_routes(app, login_required, api_key_or_login_required):
                 redirect_address=data.get('redirect_address'),
                 web_dom=web_dom
             )
-            
-            return jsonify({'success': True, 'message': '模板更新成功'})
+
+            response_data = {
+                'success': True,
+                'message': '模板更新成功'
+            }
+
+            if sync_to_file and fields_to_update:
+                response_data['synced_to_file'] = True
+                response_data['updated_fields'] = list(fields_to_update.keys())
+
+            return jsonify(response_data)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return jsonify({'success': False, 'error': str(e)}), 500
 
 
