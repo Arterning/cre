@@ -6,37 +6,113 @@ from flask import Blueprint, render_template, jsonify, request
 from functools import wraps
 from database import get_templates, get_template_by_name, insert_template, update_template, delete_template
 import json
+from ai.claude_client import one_shot_call, extract_text_from_body, load_api_key
+import argparse
 
 # 创建蓝图
 template_bp = Blueprint('templates', __name__)
+
+
+def extract_template_fields_with_ai(template_code):
+    """使用Claude AI自动提取模板代码中的字段信息"""
+    try:
+        # 获取API Key
+        args = argparse.Namespace(key_file=None)
+        api_key = load_api_key(args)
+
+        # 构建提示词
+        prompt = f"""请分析以下Python模板代码，提取其中的配置信息。
+
+代码：
+```python
+{template_code}
+```
+
+请严格按照以下JSON格式返回结果（只返回JSON，不要包含任何其他文字）：
+{{
+    "server_address": "服务器地址（如：imap.gmail.com, outlook.office365.com等，如果找不到则为空字符串）",
+    "protocol_type": "协议类型（如：imap, smtp, pop3, web等，如果找不到则为空字符串）",
+    "port": 端口号（如：993, 587, 443等，如果找不到则为null）,
+    "type": "模板类型（根据代码判断是email, cookie, web还是api，默认为default）",
+    "api_address": "API地址（如果代码中有API调用，提取URL，否则为空字符串）",
+    "login_address": "登录页面地址（如果是web类型，提取登录URL，否则为空字符串）",
+    "redirect_address": "重定向地址（如果代码中有重定向逻辑，提取URL，否则为空字符串）"
+}}
+
+注意：
+1. 如果是IMAP邮件下载脚本，协议类型应该是"imap"
+2. 如果是Web自动化脚本（使用selenium），协议类型应该是"web"
+3. 如果是Cookie下载脚本，协议类型应该是"cookie"
+4. 端口号必须是整数或null
+5. 所有字符串字段如果找不到对应信息，应该返回空字符串""而不是null
+6. 只返回JSON，不要包含任何解释性文字"""
+
+        # 调用Claude API
+        response = one_shot_call(
+            api_key=api_key,
+            prompt=prompt,
+            model="claude-sonnet-4-20250514",
+            max_tokens=2000,
+            system=None,
+            api_url="https://api.anthropic.com/v1/messages",
+            timeout=30.0,
+            retries=2
+        )
+
+        if response.get("error"):
+            return None, f"API调用失败: {response.get('body', {}).get('message', 'Unknown error')}"
+
+        # 提取文本内容
+        body = response.get("body", {})
+        text = extract_text_from_body(body)
+
+        # 解析JSON
+        # 移除可能的markdown代码块标记
+        text = text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        text = text.strip()
+
+        try:
+            result = json.loads(text)
+            return result, None
+        except json.JSONDecodeError as e:
+            return None, f"解析JSON失败: {str(e)}, 原始内容: {text[:200]}"
+
+    except Exception as e:
+        return None, f"提取字段时出错: {str(e)}"
 
 
 def init_templates_from_filesystem():
     """初始化函数：将文件系统中的模板导入到数据库中（如果数据库中不存在）"""
     try:
         templates_dir = os.path.join(os.getcwd(), 'ai', 'templates')
-        
+
         # 如果模板目录不存在，创建它
         if not os.path.exists(templates_dir):
             os.makedirs(templates_dir, exist_ok=True)
             return
-        
+
         # 遍历模板目录中的所有.py文件
         for filename in os.listdir(templates_dir):
             if filename.endswith('.py'):
                 # 从文件名中提取模板名称（去掉.py后缀）
                 template_name = filename.replace('.py', '')
-                
+
                 # 检查数据库中是否已存在该模板
                 if not get_template_by_name(template_name) and not get_template_by_name(filename):
                     # 如果不存在，插入到数据库中
                     # 注意：这里我们使用文件名作为path，而将去掉.py后缀的作为name
                     # 同时设置默认的服务器地址、协议类型和端口
                     insert_template(
-                        name=template_name, 
-                        path=filename, 
-                        server_address='', 
-                        protocol_type='', 
+                        name=template_name,
+                        path=filename,
+                        server_address='',
+                        protocol_type='',
                         port=None,
                         type='default',
                         api_address='',
@@ -44,7 +120,7 @@ def init_templates_from_filesystem():
                         redirect_address='',
                         web_dom=''
                     )
-        
+
     except Exception as e:
         print(f"初始化模板数据时出错: {str(e)}")
 
@@ -403,19 +479,72 @@ def register_template_routes(app, login_required, api_key_or_login_required):
             template = get_template_by_name(template_name)
             if not template:
                 return jsonify({'success': False, 'error': '模板不存在'}), 404
-            
+
             # 删除文件
             templates_dir = os.path.join(os.getcwd(), 'ai', 'templates')
             filepath = os.path.join(templates_dir, template['path'])
-            
+
             if os.path.exists(filepath):
                 os.remove(filepath)
-            
+
             # 删除数据库记录
             deleted = delete_template(template_name)
             if not deleted:
                 return jsonify({'success': False, 'error': '删除模板记录失败'}), 500
-            
+
             return jsonify({'success': True, 'message': '模板删除成功'})
         except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+    @app.route('/api/templates/<template_name>/extract-fields', methods=['POST'])
+    @api_key_or_login_required
+    def api_extract_template_fields(template_name):
+        """使用AI自动提取模板代码中的字段信息并更新到数据库"""
+        try:
+            # 检查模板是否存在
+            template = get_template_by_name(template_name)
+            if not template:
+                return jsonify({'success': False, 'error': '模板不存在'}), 404
+
+            # 读取模板文件内容
+            templates_dir = os.path.join(os.getcwd(), 'ai', 'templates')
+            filepath = os.path.join(templates_dir, template['path'])
+
+            if not os.path.exists(filepath):
+                return jsonify({'success': False, 'error': '模板文件不存在'}), 404
+
+            with open(filepath, 'r', encoding='utf-8') as f:
+                template_code = f.read()
+
+            # 使用AI提取字段
+            extracted_fields, error = extract_template_fields_with_ai(template_code)
+
+            if error:
+                return jsonify({'success': False, 'error': error}), 500
+
+            if not extracted_fields:
+                return jsonify({'success': False, 'error': 'AI未能提取到有效字段'}), 500
+
+            # 更新数据库
+            update_template(
+                template_name,
+                server_address=extracted_fields.get('server_address'),
+                protocol_type=extracted_fields.get('protocol_type'),
+                port=extracted_fields.get('port'),
+                type=extracted_fields.get('type', 'default'),
+                api_address=extracted_fields.get('api_address'),
+                login_address=extracted_fields.get('login_address'),
+                redirect_address=extracted_fields.get('redirect_address')
+            )
+
+            return jsonify({
+                'success': True,
+                'message': '字段提取成功',
+                'extracted_fields': extracted_fields
+            })
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
             return jsonify({'success': False, 'error': str(e)}), 500
