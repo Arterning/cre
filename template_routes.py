@@ -17,7 +17,7 @@ def extract_template_fields_with_ai(template_code):
     """使用Claude AI自动提取模板代码中的字段信息"""
     try:
         # 获取API Key
-        args = argparse.Namespace(key_file=None)
+        args = argparse.Namespace(key_file='ai/key.txt')
         api_key = load_api_key(args)
 
         # 构建提示词
@@ -91,7 +91,7 @@ def update_template_code_with_ai(template_code, fields):
     """使用Claude AI根据新的字段更新模板代码"""
     try:
         # 获取API Key
-        args = argparse.Namespace(key_file=None)
+        args = argparse.Namespace(key_file='ai/key.txt')
         api_key = load_api_key(args)
 
         # 构建字段描述
