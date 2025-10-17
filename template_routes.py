@@ -65,6 +65,7 @@ def extract_template_fields_with_ai(template_code):
         # 提取文本内容
         body = response.get("body", {})
         text = extract_text_from_body(body)
+        print(f"原始文本内容: {text}")
 
         # 解析JSON
         # 移除可能的markdown代码块标记
@@ -79,6 +80,7 @@ def extract_template_fields_with_ai(template_code):
 
         try:
             result = json.loads(text)
+            print(f"成功解析JSON: {result}")
             return result, None
         except json.JSONDecodeError as e:
             return None, f"解析JSON失败: {str(e)}, 原始内容: {text[:200]}"
